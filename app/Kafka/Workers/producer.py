@@ -2,47 +2,68 @@ import json
 import time
 import random
 from kafka import KafkaProducer
+from app.APIs.NewsApis.Finnhub import get_news_finnhub
+import datetime
 
 def get_producer():
-    
     producer =  KafkaProducer(
         bootstrap_servers=['localhost:9092'],
         value_serializer=lambda x: json.dumps(x).encode('utf-8')
     )
-
     return producer
+
+seen_news_ids = []
+
+def clean_date(timestamp):
+    try:
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return str(timestamp)
+        
 
 def run_producer():
     print("Producer Service Started.......")
     producer = get_producer()
     print("Producer Connected!!")
 
-    tickers = ["HDFC", "TCS", "RELIANCE", "INFY", "ZOMATO"]
-    actions = ["surges", "falls", "flat", "reports growth", "acquires startup"]
-
     try:
         while True:
-            print("Collecting data through the apis...")
+            print("Collecting data through the news apis...")
 
-            ticker = random.choice(tickers)
-            price_change = random.randint(-5, 10)
-            
-            payload = {
-                "ticker": ticker,
-                "headline": f"{ticker} {random.choice(actions)} by {abs(price_change)}% in intraday trade",
-                "price_change": f"{price_change}%",
-                "timestamp": time.time()
-            }
+            news_items  = get_news_finnhub()
+            new_count = 0
 
-            ## sending the data
-            producer.send('market-news', value=payload)
+            for news in news_items:
+                id = news['id']
+                if id  in seen_news_ids:
+                    continue
+
+                print(f"Found new news: {news['headline'][:30]}...")
             
-           
-            producer.flush()
+                payload = {
+                        "id" : news['id'],
+                        "category": news['category'],
+                        "headline": news['headline'],
+                        "date": clean_date(news['datetime']),
+                        "source": news['source'],
+                        "summary": news['summary'],
+                        "url":  news['url']
+                    }
+
+                ## sending the data
+                producer.send('market-news', value=payload)
+                producer.flush()
+
+                seen_news_ids.add(id)
+                new_count += 1
+
             
-            print(f"Sent: {payload['ticker']} | {payload['headline']}")
+                print(f"Sent: {payload['headline'][:20]}")
+
+            if new_count == 0:
+                print("No new items. Waiting...")
             
-            time.sleep(3)
+            time.sleep(60)   ## fire api call after every 1 minutes 
 
     except KeyboardInterrupt:
         print("\nStopping Producer...")
