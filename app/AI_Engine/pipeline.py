@@ -15,4 +15,5 @@ def process_and_store_news(text , url):
     else:
         print("No chunks created (Text might be too short or invalid).")
 
-process_and_store_news("Hi i am om gholap" , "www.google.com")
+
+

@@ -1,6 +1,7 @@
 import json
 from kafka import KafkaConsumer
 from app.APIs.Services.scrap import fetch_with_spoofing
+from app.AI_Engine.pipeline import process_and_store_news
 
 def get_consumer():
     consumer = KafkaConsumer(
@@ -36,6 +37,9 @@ def start_consumer():
 
             print(full_article[:100])
 
+            process_and_store_news(full_article , url)
+            
+            print("Documents Added to the vectordb!! .. ")
             print("\n\n\n\n\n\n\n")
 
             ## will handle here the embedding an all right 
