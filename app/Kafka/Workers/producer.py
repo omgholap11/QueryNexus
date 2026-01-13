@@ -1,6 +1,5 @@
 import json
 import time
-import random
 from kafka import KafkaProducer
 from app.APIs.NewsApis.Finnhub import get_news_finnhub
 import datetime
@@ -8,11 +7,10 @@ import datetime
 def get_producer():
     producer =  KafkaProducer(
         bootstrap_servers=['localhost:9092'],
-        value_serializer=lambda x: json.dumps(x).encode('utf-8')
-    )
+        value_serializer=lambda x: json.dumps(x).encode('utf-8'))
     return producer
 
-seen_news_ids = []
+seen_news_ids = set()
 
 def clean_date(timestamp):
     try:
@@ -72,3 +70,7 @@ def run_producer():
 
 if __name__ == "__main__":
     run_producer()
+
+
+## running the script from the root 
+## python -m app.Kafka.Workers.producer

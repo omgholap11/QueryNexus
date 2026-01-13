@@ -1,9 +1,8 @@
 import json
 from kafka import KafkaConsumer
+from app.APIs.Services.scrap import fetch_with_spoofing
 
-def start_consumer():
-    print("Consumer Connecting.....")
-
+def get_consumer():
     consumer = KafkaConsumer(
         "market-news" ,    ## subscribing to the topic right 
         bootstrap_servers=['localhost:9092'],    ## kafka runnning port 
@@ -12,18 +11,35 @@ def start_consumer():
         value_deserializer=lambda x: json.loads(x.decode('utf-8'))  ## convertc the incominng bytes to the python dictionary
     )
 
+    return consumer
+
+def start_consumer():
+    print("Consumer Connecting.....")
+    consumer = get_consumer()
     print("Consumer Connected!!")
 
     try:
         for message in consumer:
             data = message.value
-
             print(
                 f" GROUP[velo-worker-group] : "
                 f"TOPIC[{message.topic}] : "
                 f"PART:{message.partition} : "
-                f"Ticker: {data.get('ticker')} | Headline: {data.get('headline')}"
+                f"id: {data.get('id')} | Headline: {data.get('headline')[:30]}"
             )
+
+            url = data.get('url')   ## obtained the url now scrap the content present on the url right  
+            full_article = fetch_with_spoofing(url)
+
+            if full_article is None:
+                continue
+
+            print(full_article[:100])
+
+            print("\n\n\n\n\n\n\n")
+
+            ## will handle here the embedding an all right 
+
 
     except KeyboardInterrupt:
         print("Consumer Stopped.")
