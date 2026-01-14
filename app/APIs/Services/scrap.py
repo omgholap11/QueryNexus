@@ -13,9 +13,9 @@ def fetch_with_spoofing(url):
     print(f"TESTING: {url}")
     
     try:
-        # Step 1: Download using Requests + Headers (The Disguise)
+       
         print("Downloading with Fake ID...", end=" ")
-        # We set a 10-second timeout so it doesn't hang forever
+        
         response = requests.get(url, headers=HEADERS, timeout=10)
         
         if response.status_code in [403, 401]:            ## 
