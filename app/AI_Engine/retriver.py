@@ -59,7 +59,7 @@ def format_docs(docs):
 def get_response(query):
    
     prompt_template = get_rag_prompt()
-    llm = get_gemini_flash() 
+    llm = get_ollama_local()
     parser = StrOutputParser()
     retriever = get_retriever("similarity" , 2)
 
@@ -85,5 +85,5 @@ def get_response(query):
 
 # print(get_response("What happened about the netflix and warner bros deal?"))
 # print(get_response("Who will win today maxverstappen or lando norris?"))
-print(get_response("what is the latest news related to the tariffs?"))
+# print(get_response("what is the latest news related to the tariffs?"))
 # print(get_response("What happened about the netflix and warner bros deal?"))
