@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from app.AI_Engine.vector_store import get_vector_store
-from langchain_huggingface import ChatHuggingFace , HuggingFacePipeline
 from langchain_core.output_parsers import StrOutputParser
+from app.AI_Engine.llm import get_gemini_flash , get_ollama_local
 
 RAG_PROMPT_TEMPLATE = """
 You are a senior financial analyst at VeloMarketSense. 
@@ -22,17 +22,7 @@ Question: {question}
 Answer:
 """
 
-def get_llm():
-    llm = HuggingFacePipeline.from_model_id(
-    model_id="TinyLlama/TinyLlama-1.1B-Chat-v1.0" , 
-    task = 'text-generation' , 
-    pipeline_kwargs=dict(
-        temperature=0.5 , 
-        max_new_tokens = 100
-    )
-    )
-    model = ChatHuggingFace(llm = llm)
-    return model
+
 
 def get_rag_prompt():
    
@@ -69,7 +59,7 @@ def format_docs(docs):
 def get_response(query):
    
     prompt_template = get_rag_prompt()
-    llm = get_llm() 
+    llm = get_gemini_flash() 
     parser = StrOutputParser()
     retriever = get_retriever("similarity" , 2)
 
@@ -92,4 +82,8 @@ def get_response(query):
 
     return response
 
-print(get_response("What happened about the netflix and warner bros deal?"))
+
+# print(get_response("What happened about the netflix and warner bros deal?"))
+# print(get_response("Who will win today maxverstappen or lando norris?"))
+print(get_response("what is the latest news related to the tariffs?"))
+# print(get_response("What happened about the netflix and warner bros deal?"))

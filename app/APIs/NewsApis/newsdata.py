@@ -1,0 +1,65 @@
+import requests
+import os
+import sys
+import datetime
+from dotenv import load_dotenv
+load_dotenv()
+
+def normalize_to_utc(timestamp):
+    try:
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return str(timestamp)
+
+NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY")
+
+def get_newsdata_io(category="business,technology", country="in"):
+   
+    if not NEWSDATA_API_KEY:
+        print("Error: NEWSDATA_API_KEY is missing.")
+        return []
+
+    print(f"Fetching NewsData.io ({country.upper()} - {category})...")
+
+    url = "https://newsdata.io/api/1/news"
+    
+    params = {
+        'apikey': NEWSDATA_API_KEY,
+        'country': country,
+        'category': category,
+        'language': 'en', 
+        # 'full_content' : '1'   ## requires the paid plan 
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 429:
+            print("NewsData.io Quota Exceeded (200/day limit hit).")
+            return []
+            
+        response.raise_for_status()
+        data = response.json()
+        
+        results = data.get('results', [])
+        print(f"NewsData.io: Found {len(results)} articles.")
+
+        normalized_news = []
+        for item in results:
+            normalized_news.append({
+                "id": item.get('article_id'), 
+                "headline": item.get('title'),
+                "summary": item.get('description'),
+                "url": item.get('link'),
+                "source": item.get('source_id'),
+                "date": normalize_to_utc(item.get('pubDate')), 
+                "category": "market-news",
+                "tags": item.get('keywords', []) 
+            })
+            
+        return normalized_news
+
+    except Exception as e:
+        print(f"NewsData.io Error: {e}")
+        return []
+
