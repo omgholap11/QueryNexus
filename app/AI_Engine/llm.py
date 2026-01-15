@@ -2,7 +2,11 @@
 from langchain_huggingface import ChatHuggingFace , HuggingFacePipeline
 from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
-load_dotenv()
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, '..', '..', '.env')
+load_dotenv(dotenv_path=env_path)
 
 def get_ollama_local():
     llm = HuggingFacePipeline.from_model_id(

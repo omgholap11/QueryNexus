@@ -1,10 +1,12 @@
-
 import requests
 import os
 import trafilatura
 from requests.exceptions import RequestException
 from dotenv import load_dotenv
-load_dotenv()
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, '..', '..', '.env')
+load_dotenv(dotenv_path=env_path)
 
 SCRAPERAPI_KEY = os.getenv('SCRAPERAPI_KEY')
 

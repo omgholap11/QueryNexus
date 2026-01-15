@@ -7,3 +7,8 @@ class UserSchema(BaseModel):
     email : Annotated[EmailStr , Field(title="Provide the email of the user: ")]
     password : Annotated[str , Field(title="Password of the user: ")]
     
+
+class UserSignInSchema(BaseModel): 
+    email : Annotated[EmailStr , Field(title="Provide the email of the user: ")]
+    password : Annotated[str , Field(title="Password of the user: ")]
+    
