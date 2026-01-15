@@ -16,7 +16,7 @@ def normalize_to_utc(timestamp):
 
 NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY")
 
-def get_newsdata_io(category="business,technology", country="in"):
+def get_newsdata_io(category="business", country="in"):
    
     if not NEWSDATA_API_KEY:
         print("Error: NEWSDATA_API_KEY is missing.")
@@ -49,20 +49,21 @@ def get_newsdata_io(category="business,technology", country="in"):
 
         normalized_news = []
         for item in results:
-            normalized_news.append({
-                "id": item.get('article_id'), 
+            normalized_news.append({ 
                 "headline": item.get('title'),
                 "summary": item.get('description'),
                 "url": item.get('link'),
                 "source": item.get('source_id'),
                 "date": normalize_to_utc(item.get('pubDate')), 
                 "category": "market-news",
-                "tags": item.get('keywords', []) 
             })
             
+            print(len(normalized_news))
+        print(normalized_news)
         return normalized_news
 
     except Exception as e:
         print(f"NewsData.io Error: {e}")
         return []
 
+# get_newsdata_io()

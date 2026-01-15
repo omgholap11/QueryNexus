@@ -1,12 +1,13 @@
 import requests
 import os
 import datetime
+import time
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '..', '..', '.env')
 load_dotenv(dotenv_path=env_path)
-
+MAX_NEWS_AGE_SECONDS = 43200
 
 def normalize_to_utc(timestamp):
     try:
@@ -20,7 +21,7 @@ MARKETAUX_API_TOKEN = os.getenv("MARKETAUX_API_TOKEN")
 
 # print(MARKETAUX_API_TOKEN)
 
-def get_marketaux_news(symbols=None, country="in", limit=3):
+def get_marketaux_news(symbols=None, country="in"):
     if not MARKETAUX_API_TOKEN:
         print("Error: MARKETAUX_API_TOKEN is missing.")
         return []
@@ -32,7 +33,6 @@ def get_marketaux_news(symbols=None, country="in", limit=3):
     params = {
         'api_token': MARKETAUX_API_TOKEN,
         'language': 'en',
-        'limit': limit,
     }
 
    
@@ -40,6 +40,8 @@ def get_marketaux_news(symbols=None, country="in", limit=3):
         params['symbols'] = symbols
     else:
         params['countries'] = country
+
+    
 
     try:
         response = requests.get(url, params=params, timeout=10)
@@ -56,23 +58,20 @@ def get_marketaux_news(symbols=None, country="in", limit=3):
 
         normalized_news = []
         for item in articles:
-            sentiment = item.get('entities', [{}])[0].get('sentiment_score', 0)
-            tags = [e.get('symbol') for e in item.get('entities', []) if e.get('symbol')]
+           
             normalized_news.append({
-                "id": item.get('uuid'), # Unique UUID
                 "headline": item.get('title'),
                 "summary": item.get('description'),
                 "url": item.get('url'),
                 "source": item.get('source'),
                 "date": normalize_to_utc(item.get('published_at')),
                 "category": "financial",
-                # We store sentiment score in metadata/tags for the AI
-                "tags": tags,
-                "sentiment_score": sentiment 
             })
-            
+        print(normalized_news)    
         return normalized_news
 
     except Exception as e:
         print(f"Marketaux Error: {e}")
         return []
+
+# get_marketaux_news()
