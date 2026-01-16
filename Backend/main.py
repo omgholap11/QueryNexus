@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from app.AI_Engine.retriver import get_response
+from Backend.AI_Engine.retriver import get_response
 app = FastAPI()
 from pydantic import BaseModel
-from app.Routes.user import userrouter
-from app.Models.user import Base
-from app.Config.Database.database import engine
+from Backend.Routes.user import userrouter
+from Backend.Models.user import Base
+from Backend.Config.Database.database import engine
 
 ## will load all the tables 
 Base.metadata.create_all(bind=engine)

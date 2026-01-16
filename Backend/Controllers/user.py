@@ -1,7 +1,7 @@
 from fastapi import HTTPException 
-from app.Models.user import UserModel
+from Backend.Models.user import UserModel
 from sqlalchemy.orm import Session
-from app.Services.authentication import generate_token
+from Backend.Services.authentication import generate_token
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes = ["bcrypt"] , deprecated = "auto")

@@ -1,8 +1,8 @@
 from fastapi import APIRouter , Depends , Response
-from app.Schema.user import UserSchema , UserSignInSchema
-from app.Config.Database.database import get_db  
+from Backend.Schema.user import UserSchema , UserSignInSchema
+from Backend.Config.Database.database import get_db  
 from sqlalchemy.orm import Session
-from app.Controllers.user import handle_user_signup , handle_user_sign_in
+from Backend.Controllers.user import handle_user_signup , handle_user_sign_in
 
 userrouter = APIRouter()
 

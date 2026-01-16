@@ -1,10 +1,10 @@
 import json
 import time
 from kafka import KafkaProducer
-from app.APIs.NewsApis.Finnhub import get_news_finnhub
-from app.APIs.NewsApis.marketaux import get_marketaux_news
-from app.APIs.NewsApis.moneycontrol import get_livemint_news
-from app.Services.redis_client import check_and_cache_to_redis
+from Backend.APIs.NewsApis.Finnhub import get_news_finnhub
+from Backend.APIs.NewsApis.marketaux import get_marketaux_news
+from Backend.APIs.NewsApis.moneycontrol import get_livemint_news
+from Backend.Services.redis_client import check_and_cache_to_redis
 
 
 import datetime
@@ -90,4 +90,4 @@ if __name__ == "__main__":
     run_producer()
 
 ## running the script from the root 
-## python -m app.Kafka.Workers.producer
+## python -m Backend.Kafka.Workers.producer

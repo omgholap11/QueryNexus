@@ -1,5 +1,5 @@
-from app.APIs.Services.scrap_traf import scrape_with_lib
-from app.APIs.Services.scrap_api import scrape_with_api
+from Backend.APIs.Services.scrap_traf import scrape_with_lib
+from Backend.APIs.Services.scrap_api import scrape_with_api
 
 def smart_scrapper(url):
     full_article = None
