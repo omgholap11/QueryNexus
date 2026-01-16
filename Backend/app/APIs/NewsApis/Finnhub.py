@@ -4,10 +4,11 @@ import os
 from datetime import datetime
 import time
 current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir, '..', '..', '.env')
+env_path = os.path.join(current_dir, '..', '..', '..', '.env')
 load_dotenv(dotenv_path=env_path)
 
 FINNHUB_API_KEY = os.environ.get('FINNHUB_API_KEY')
+print(FINNHUB_API_KEY)
 MAX_NEWS_AGE_SECONDS = 43200   ## max 12 hour
 
 try:

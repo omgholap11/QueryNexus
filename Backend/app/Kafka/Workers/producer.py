@@ -67,14 +67,14 @@ def run_producer():
                     if check_and_cache_to_redis(url):
                         ## sending the data to kafka
                         producer.send('market-news', value=news)
-                        newscnt += 1
+                        news_cnt += 1
 
                 except Exception as e:
                     print(f"Error occured while producing the data in kafka!! -> {e}")
             
-            if newscnt > 0:
+            if news_cnt > 0:
                 producer.flush()
-                print(f"Found {newscnt} new news in current cycle.")
+                print(f"Found {news_cnt} new news in current cycle.")
             else:
                 print("No new news articles found in current cycle!!")
 

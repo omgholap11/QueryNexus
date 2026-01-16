@@ -34,8 +34,13 @@ services:
       # Listeners
       # 9092 = Clients (Producer/Consumer)
       # 9093 = Controller (Internal)
-      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://vms-kafka:9092
+      # - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093   ##  Production sathi ya 2 line 
+      # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://vms-kafka:9092
+
+
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093  ## local kafka ke liye ye hai!!1
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
@@ -57,7 +62,7 @@ services:
     container_name: backend_api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8000:8000"      # Expose API to localhost
+      - "8005:8000"      # Expose API to localhost
     volumes:
       - ./app:/code/app  # Sync changes instantly (Hot Reload)
     environment:
@@ -113,4 +118,5 @@ networks:
     driver: bridge
 
 
-## docker-compose up --build -d
+## docker-compose up --build -d  >> complete infra
+## docker-compose up -d redis kafka   >> just the redis and the kafka

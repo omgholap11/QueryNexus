@@ -4,7 +4,7 @@ import os
 import hashlib
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir , '..', '.env')
+env_path = os.path.join(current_dir , '..','..' ,'.env')
 load_dotenv(dotenv_path=env_path)
 
 

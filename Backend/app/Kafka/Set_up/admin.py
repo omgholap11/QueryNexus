@@ -16,7 +16,7 @@ def init_kafka():
     print(f"Creating the topic {topic_name}...")
 
     try:
-        admin_client.create_topics(new_topics=[topic_name] , validate_only=False)
+        admin_client.create_topics(new_topics=[new_topic] , validate_only=False)
         print(f"Topic '{topic_name}' created successfully!!")
 
     except TopicAlreadyExistsError:

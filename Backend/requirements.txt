@@ -1,5 +1,5 @@
 fastapi
-feedparser
+feedparser>=6.0.10
 finnhub_python
 kafka_python
 langchain
@@ -9,7 +9,6 @@ langchain_huggingface
 langchain_text_splitters
 passlib
 pydantic
-pygooglenews
 PyJWT
 PyJWT
 python-dotenv
@@ -17,3 +16,4 @@ redis
 Requests
 SQLAlchemy
 trafilatura
+pydantic[email]
