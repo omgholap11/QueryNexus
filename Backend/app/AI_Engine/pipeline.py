@@ -1,5 +1,5 @@
-from Backend.AI_Engine.chunking import get_chunks
-from Backend.AI_Engine.embedding import add_documents_to_vectordb
+from app.AI_Engine.chunking import get_chunks
+from app.AI_Engine.embedding import add_documents_to_vectordb
 
 def process_and_store_news(text , metadata):
     if not text:

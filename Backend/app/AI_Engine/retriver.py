@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
-from Backend.AI_Engine.vector_store import get_vector_store
+from app.AI_Engine.vector_store import get_vector_store
 from langchain_core.output_parsers import StrOutputParser
-from Backend.AI_Engine.llm import get_gemini_flash , get_ollama_local
+from app.AI_Engine.llm import get_gemini_flash , get_ollama_local
 
 RAG_PROMPT_TEMPLATE = """
 You are a senior financial analyst at VeloMarketSense. 

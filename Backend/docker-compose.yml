@@ -1,0 +1,116 @@
+services:
+  # ----------------------------------------------------------------
+  # 1. REDIS
+  # ----------------------------------------------------------------
+  redis:
+    image: redis/redis-stack:latest
+    container_name: vms-redis-stack
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - ./infra_data/redis:/data 
+    restart: always
+    networks:
+      - news_network
+
+  # ----------------------------------------------------------------
+  # 2. KAFKA (Official Apache Image)
+  # ----------------------------------------------------------------
+  kafka:
+    image: apache/kafka:latest  # Using specific stable version
+    container_name: vms-kafka  # <--- YOUR REQUESTED NAME
+    ports:
+      - "9092:9092"
+    environment:
+      # NOTE: Apache image does NOT use 'KAFKA_CFG_' prefix. 
+      # We use standard 'KAFKA_' prefixes here.
+      
+      # KRaft Settings
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@vms-kafka:9093
+      
+      # Listeners
+      # 9092 = Clients (Producer/Consumer)
+      # 9093 = Controller (Internal)
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://vms-kafka:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      
+      # Critical for Single-Node (prevents crashing on start)
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      
+    volumes:
+      - ./infra_data/kafka:/var/lib/kafka/data
+    networks:
+      - news_network
+    restart: always
+
+  backend_api:
+    build: .             # Build from current directory (backend/)
+    container_name: backend_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"      # Expose API to localhost
+    volumes:
+      - ./app:/code/app  # Sync changes instantly (Hot Reload)
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BOOTSTRAP_SERVERS=vms-kafka:9092
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - news_network
+
+  # ----------------------------------------------------------------
+  # 2. PRODUCER WORKER (Updated Command)
+  # ----------------------------------------------------------------
+  news_producer:
+    build: .
+    container_name: news_producer
+    # Notice the module path: app.workers.producer
+    command: python -m app.workers.producer
+    volumes:
+      - ./app:/code/app
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=vms-kafka:9092
+      - REDIS_HOST=redis
+    networks:
+      - news_network
+
+  # ----------------------------------------------------------------
+  # 3. CONSUMER WORKER (Updated Command)
+  # ----------------------------------------------------------------
+  news_consumer:
+    build: .
+    container_name: news_consumer
+    # Notice the module path: app.workers.consumer
+    command: python -m app.workers.consumer
+    volumes:
+      - ./app:/code/app
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=vms-kafka:9092
+      - REDIS_HOST=redis
+    networks:
+      - news_network
+
+networks:
+  news_network:
+    driver: bridge
+
+
+## docker-compose up --build -d

@@ -1,5 +1,5 @@
 from fastapi import Request , HTTPException
-from Backend.Services.authentication import verify_token
+from app.Services.authentication import verify_token
 async def auth_middlewares(req : Request):
     token = req.cookies.get('token')
     print(f"Inside the Auth Middleware token: {token}")

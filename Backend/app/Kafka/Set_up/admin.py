@@ -1,4 +1,4 @@
-from Backend.Kafka.Set_up.client import admin_client
+from app.Kafka.Set_up.client import admin_client
 from kafka.errors import TopicAlreadyExistsError
 from kafka.admin import NewTopic
 
