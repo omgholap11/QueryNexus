@@ -7,14 +7,14 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap = 150
 )
 
-def get_chunks(text , source_url):
+def get_chunks(text , metadata):
 
     if len(text) < CHUNK_SIZE:
         # Don't split. Just return it as one document.
-        return [Document(page_content=text, metadata={"source": source_url})]
+        return [Document(page_content=text, metadata=metadata)]
 
     try:
-        chunks = splitter.create_documents([text], metadatas=[{"source": source_url}])
+        chunks = splitter.create_documents([text], metadatas=[metadata])
 
         print(f"Chunkking Done!... length: {len(chunks)}")
         return chunks

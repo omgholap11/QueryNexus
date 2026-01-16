@@ -10,7 +10,7 @@ load_dotenv(dotenv_path=env_path)
 
 SCRAPERAPI_KEY = os.getenv('SCRAPERAPI_KEY')
 
-def scrape_with_proxy(url):
+def scrape_with_api(url):
 
     if not SCRAPERAPI_KEY:
         print("Error: SCRAPERAPI_KEY is missing from environment.")
@@ -47,7 +47,7 @@ def scrape_with_proxy(url):
             include_tables=False # Set to True if you need data tables
         )
 
-        if clean_text and len(clean_text) > 200:
+        if clean_text:
             print(f"Success! Extracted {len(clean_text)} chars.")
             return clean_text
         else:

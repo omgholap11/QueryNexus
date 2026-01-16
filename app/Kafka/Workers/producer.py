@@ -4,6 +4,9 @@ from kafka import KafkaProducer
 from app.APIs.NewsApis.Finnhub import get_news_finnhub
 from app.APIs.NewsApis.marketaux import get_marketaux_news
 from app.APIs.NewsApis.moneycontrol import get_livemint_news
+from app.Services.redis_client import check_and_cache_to_redis
+
+
 import datetime
 
 def get_producer():
@@ -22,13 +25,14 @@ def clean_date(timestamp):
 
 def run_producer():
     print("Producer Service Started.......")
-    # producer = get_producer()
+    producer = get_producer()
     print("Producer Connected!!")
 
     try:
         while True:
             print("Collecting data through the news apis...")
             all_articles = []
+            news_cnt = 0
             # Finnhub source
             try:
                 finnhub_news = get_news_finnhub()
@@ -53,48 +57,37 @@ def run_producer():
             print(f"Length of all articles: {len(all_articles)}")
             # print(all_articles) 
             
-            # for news in all_articles:
-            #     id = news['id']
-            #     if id  in seen_news_ids:
-            #         continue
+            for news in all_articles:
+                url = news.get('url')
 
-            #     print(f"Found new news: {news['headline'][:30]}...")
+                if url is None:
+                    continue
+
+                try:
+                    if check_and_cache_to_redis(url):
+                        ## sending the data to kafka
+                        producer.send('market-news', value=news)
+                        newscnt += 1
+
+                except Exception as e:
+                    print(f"Error occured while producing the data in kafka!! -> {e}")
             
-            #     payload = {
-            #             "id" : news['id'],
-            #             "category": news['category'],
-            #             "headline": news['headline'],
-            #             "date": clean_date(news['datetime']),
-            #             "source": news['source'],
-            #             "summary": news['summary'],
-            #             "url":  news['url']
-            #         }
+            if newscnt > 0:
+                producer.flush()
+                print(f"Found {newscnt} new news in current cycle.")
+            else:
+                print("No new news articles found in current cycle!!")
 
-            #     ## sending the data
-            #     producer.send('market-news', value=payload)
-            #     producer.flush()
-
-            #     seen_news_ids.add(id)
-            #     new_count += 1
-
-            
-            #     print(f"Sent: {payload['headline'][:20]}")
-
-            # if new_count == 0:
-            #     print("No new items. Waiting...")
-            
-            # time.sleep(60)   ## fire api call after every 1 minutes 
+            print("Sleeping for 15 minutes.........")
+            time.sleep(900)   ## fire api call after every 15 minutes 
 
     except KeyboardInterrupt:
         print("\nStopping Producer...")
-        # producer.close()
+        producer.close()
         print("Producer Disconnected!!")
 
-# if __name__ == "__main__":
-#     run_producer()
-
-run_producer()
-
+if __name__ == "__main__":
+    run_producer()
 
 ## running the script from the root 
 ## python -m app.Kafka.Workers.producer

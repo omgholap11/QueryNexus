@@ -40,7 +40,7 @@ def get_redis_client():
         return None
 
 
-def cache_to_redis(url):
+def check_and_cache_to_redis(url):
     if not url:
         return False
 
@@ -59,7 +59,7 @@ def cache_to_redis(url):
         print("Unique Url storing to the Redis!!")
         r_client.set(redis_key , "1" , ex=259200)   ## 3 days 
 
-        return True
+        return True    ## push it to the kafka
     except Exception as e:
         print(f"Error occured duing Redis caching as {e}")
         return True

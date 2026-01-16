@@ -1,6 +1,6 @@
 import json
 from kafka import KafkaConsumer
-from app.APIs.Services.scrap import fetch_with_spoofing
+from app.APIs.Services.smart_scrape import smart_scrapper
 from app.AI_Engine.pipeline import process_and_store_news
 
 def get_consumer():
@@ -30,21 +30,47 @@ def start_consumer():
             )
 
             url = data.get('url')   ## obtained the url now scrap the content present on the url right  
-            full_article = fetch_with_spoofing(url)
+            summary = data.get('summary')
+            headline = data.get('headline')
+            date = data.get('date')
+            source = data.get('source')
 
+            full_article = None
+            source_type = "Unkown"
+            
+            scraped_data = smart_scrapper(url)
+
+            if scraped_data:
+                print("Recieved Complete Data for news!!")
+                full_article = scraped_data.get('full_article')
+                source_type = scraped_data.get('source_type')
+           
             if full_article is None:
-                continue
-
+                if summary:
+                    print("Scrapping failed continue with summary fallback!!")
+                    full_article = summary
+                    source_type = "summary_fallback"
+                else:
+                    print("Scrapping and summary fallback both failed so skip!!")
+                    continue
+    
             print(full_article[:100])
 
-            process_and_store_news(full_article , url)
-            
-            print("Documents Added to the vectordb!! .. ")
-            print("\n\n\n\n\n\n\n")
+            metadata = {
+                'url' : url,
+                'date' : date,
+                'summary' : summary,
+                'headline' : headline,
+                'source' : source,
+                'source_type' : source_type
+            }
 
-            ## will handle here the embedding an all right 
-
-
+            if full_article and len(full_article) > 80:
+                print("Adding data in the vectordb!! .....")
+                process_and_store_news(full_article , metadata)
+            else:
+                print("Article skipped..........")
+           
     except KeyboardInterrupt:
         print("Consumer Stopped.")
 

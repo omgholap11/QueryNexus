@@ -1,6 +1,5 @@
 import requests
 import trafilatura
-import time
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -8,7 +7,7 @@ HEADERS = {
     "Referer": "https://www.google.com/"
 }
 
-def fetch_with_spoofing(url):
+def scrape_with_lib(url):
     print(f"\n{'='*60}")
     print(f"TESTING: {url}")
     
@@ -24,8 +23,8 @@ def fetch_with_spoofing(url):
         
         print(f"Success ")
 
-        clean_text = trafilatura.extract(response.text, include_comments=False )
-        
+        clean_text = trafilatura.extract(response.text, include_comments=False)
+
         if clean_text:
             print("Done!")
             print(f"\n--- [ PREVIEW ] ---\n{clean_text[:100]}...\n")
