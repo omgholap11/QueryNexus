@@ -59,9 +59,10 @@ def format_docs(docs):
 def get_response(query):
    
     prompt_template = get_rag_prompt()
-    llm = get_ollama_local()
+    llm = get_gemini_flash()
+    # llm = get_ollama_local()
     parser = StrOutputParser()
-    retriever = get_retriever("similarity" , 2)
+    retriever = get_retriever("mmr" , 2)
 
     print(f"Thinking about: '{query}'")
 
