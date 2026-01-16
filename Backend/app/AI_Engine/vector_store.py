@@ -12,9 +12,14 @@ def get_ollama_embedding_model(model_name):
     print("Loading Embedding Model...")
     return HuggingFaceEmbeddings(model_name=model_name)
 
-def get_gemini_embedding_model():
+def get_gemini_001_embedding_model():
     print("Loading Gemini Model....")
     return GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+
+def get_gemini_004_embedding_model():
+    print("Loading gemini Model..")
+    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+
 
 PERSIST_DIRECTORY = "app/vms-data/chroma_db"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
@@ -22,10 +27,13 @@ MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 def get_vector_store():
     # embedding_model = get_ollama_embedding_model(MODEL_NAME)
-    embedding_model = get_gemini_embedding_model()
+    # embedding_model = get_gemini_001_embedding_model()
+    embedding_model = get_gemini_004_embedding_model()
     vector_store = Chroma(
     embedding_function=embedding_model,
     persist_directory=PERSIST_DIRECTORY,
     collection_name="market_news_collection"
     )
     return vector_store
+
+

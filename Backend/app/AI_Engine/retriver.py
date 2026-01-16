@@ -9,8 +9,8 @@ Your job is to analyze the provided news snippets and answer the user's question
 
 STRICT RULES:
 1. Use ONLY the context provided below. Do not use outside knowledge.
-2. If the answer is not in the context, say "I do not have enough information."
-3. Mention the "Source" (from metadata) if possible to build trust.
+2. If the answer is not in the context, say "Sorry, but I do not have enough information right now!"
+3. Mention the "Source and URL" (from metadata) if possible to build trust.
 4. Keep the tone professional and data-driven.
 
 --- CONTEXT START ---
@@ -62,11 +62,15 @@ def get_response(query):
     llm = get_gemini_flash()
     # llm = get_ollama_local()
     parser = StrOutputParser()
-    retriever = get_retriever("mmr" , 2)
+    retriever = get_retriever("mmr" , 5)
 
     print(f"Thinking about: '{query}'")
 
     context_docs = retriever.invoke(query)
+
+    print("Contextual Documents >>>  \n")
+    print(context_docs)
+    print("\n\n\n\n\n\n")
     
     if not context_docs:
         return "I could not find any relevant news in the database to answer that."
@@ -83,8 +87,9 @@ def get_response(query):
 
     return response
 
-
-# print(get_response("What happened about the netflix and warner bros deal?"))
+# print("Hello here in the retriver!!")
+# print(get_response("The much-awaited Union Budget for the financial year 2026-27 will be presented by"))
+# print(get_response("latest news related to the monday holiday is ?"))
 # print(get_response("Who will win today maxverstappen or lando norris?"))
 # print(get_response("what is the latest news related to the tariffs?"))
 # print(get_response("What happened about the netflix and warner bros deal?"))

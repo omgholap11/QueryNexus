@@ -20,6 +20,6 @@ def get_ollama_local():
     return model
 
 def get_gemini_flash():
-    model = init_chat_model('google_genai:gemini-2.5-flash-lite')
+    model = init_chat_model('google_genai:gemini-2.5-flash')
     return model
 
