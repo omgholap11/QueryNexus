@@ -65,3 +65,6 @@ def check_and_cache_to_redis(url):
         return True
 
 # cache_to_redis("www.google.com/omgholap11/@45")
+
+def retrive_chat_history_from_redis(session_id):
+    

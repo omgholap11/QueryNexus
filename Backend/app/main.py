@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from Backend.app.AI_Engine.pipeline import get_response
+from Backend.app.AI_Engine.response_pipeline import get_response
 app = FastAPI()
 from pydantic import BaseModel
 from app.Routes.user import userrouter

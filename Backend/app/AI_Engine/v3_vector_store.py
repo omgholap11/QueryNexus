@@ -2,8 +2,6 @@ from langchain_chroma import Chroma
 from app.AI_Engine.embedding_models import get_gemini_001_embedding_model , get_gemini_004_embedding_model , get_ollama_embedding_model
 
 PERSIST_DIRECTORY = "infra_data/chroma_db"
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
 
 def get_vector_store():
     # embedding_model = get_ollama_embedding_model()

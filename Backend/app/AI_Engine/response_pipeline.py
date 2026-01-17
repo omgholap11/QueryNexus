@@ -5,65 +5,63 @@ from datetime import datetime
 from app.Schema.response import LLM_Response_Format
 from app.AI_Engine.prompt_with_str_output import get_prompt_with_str_output 
 from app.AI_Engine.prompt_with_output_parser import get_prompt_with_output_parsers
+from app.AI_Engine.rewriter_pipeline import get_standalone_question
 
-def get_retriever(search_type , k):
-   
-    vector_store = get_vector_store()
-    retriver = vector_store.as_retriever(
-        search_type=search_type,
-        search_kwargs = {'k' : k}
-    )
-    return retriver
-   
+
+vector_store = get_vector_store()
+retriver = vector_store.as_retriever(
+    search_type="mmr",
+    search_kwargs = {'k' : 5}
+)
+
+prompt_template = get_prompt_with_str_output()
+
+llm = get_gemini_25_flash()
+
+chain = prompt_template | llm.with_structured_output(LLM_Response_Format) 
+
+
 def format_docs(docs):
-    formatted_text = ""
+    formatted_chunks = []
     for doc in docs:
-        date = doc.metadata.get("date")
+        news_date = doc.metadata.get("date", "Unknown Date")
+        url = doc.metadata.get("url", "No URL")
         content = doc.page_content
-        url = doc.metadata.get("url")
         
-        formatted_text += f"News-Date: {date}\nSource URL: {url}\nContent: {content}\n\n---\n\n"
+        chunk = (
+            f"News-Date: {news_date}\n"
+            f"Source URL: {url}\n"
+            f"Content: {content}"
+        )
+        formatted_chunks.append(chunk)
         
-    return formatted_text
+    return "\n\n---\n\n".join(formatted_chunks)
 
 
+def generate_llm_response(user_question : str , session_id : str):
 
-def get_closed_source_models():
-    llm = get_gemini_25_flash()
-    llm_wso = llm.with_structured_output(LLM_Response_Format)
-    return llm_wso
+    standalone_question = get_standalone_question(user_question , session_id)
+    print(f"Standalone Question: {standalone_question}\n")
+   
+    context_docs = retriver.invoke(standalone_question)
 
-def get_opened_source_models():
-    return get_ollama_local()
-
-
-def get_response(query):
-    print("Fetching wso prompt Template: ")
-    
-    prompt_template = get_prompt_with_str_output()
-    llm = get_closed_source_models()
-
-    # prompt_template = get_prompt_with_output_parsers()
-    # llm = get_opened_source_models()
-
-    retriever = get_retriever("mmr" , 5)
-    print(f"Thinking about: '{query}'")
-    context_docs = retriever.invoke(query)
     print("Contextual Documents >>>  \n")
-    print(context_docs)
-    print("\n\n\n\n\n\n")
+    print(f"{len(context_docs)} \n\n")
     
-    if not context_docs:
-        return "I could not find any relevant news in the database to answer that."
-    context_string = format_docs(context_docs)
-    chain = prompt_template | llm 
 
+    if not context_docs:
+        return LLM_Response_Format(
+            answer="I couldn't find any recent updates on this topic in my database.",
+            sources=[] 
+        )
+    
+    context_string = format_docs(context_docs)
     curr_date = datetime.now().strftime("%A, %B %d, %Y")
 
     response = chain.invoke({
         "curr_date" : curr_date,
         "context": context_string,
-        "question": query
+        "question": standalone_question
     })
 
     return response
