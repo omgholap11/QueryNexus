@@ -43,7 +43,6 @@ def get_standalone_question(question: str, session_id: str):
     if not chat_history:
         return question
 
-   
     try:
         standalone_question = rewriter_chain.invoke({
             'chat_history': chat_history,

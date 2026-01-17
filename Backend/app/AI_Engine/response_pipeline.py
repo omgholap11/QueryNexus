@@ -6,7 +6,7 @@ from app.Schema.response import LLM_Response_Format
 from app.AI_Engine.prompt_with_str_output import get_prompt_with_str_output 
 from app.AI_Engine.prompt_with_output_parser import get_prompt_with_output_parsers
 from app.AI_Engine.rewriter_pipeline import get_standalone_question
-
+from app.Services.redis_service import save_message_to_redis
 
 vector_store = get_vector_store()
 retriver = vector_store.as_retriever(
@@ -37,35 +37,52 @@ def format_docs(docs):
         
     return "\n\n---\n\n".join(formatted_chunks)
 
+import logging
+logger = logging.getLogger(__name__)      ## for keeping the logs logs are pessited even if the terminal clear or was off 
 
-def generate_llm_response(user_question : str , session_id : str):
-
-    standalone_question = get_standalone_question(user_question , session_id)
-    print(f"Standalone Question: {standalone_question}\n")
-   
-    context_docs = retriver.invoke(standalone_question)
-
-    print("Contextual Documents >>>  \n")
-    print(f"{len(context_docs)} \n\n")
+def generate_llm_response(user_question: str, session_id: str):
     
+    try:
+        standalone_question = get_standalone_question(user_question, session_id)
+        print(f"Standalone Question: {standalone_question}")
 
-    if not context_docs:
+    except Exception as e:
+        logger.error(f"Rewriter Failed: {e}")
+        print("Fallback: Using original question.")
+        standalone_question = user_question
+
+    try:
+        context_docs = retriver.invoke(standalone_question)
+        print(f"🔹 Contextual Docs Found: {len(context_docs)}")
+
+        if not context_docs:
+            return LLM_Response_Format(
+                answer="I couldn't find any recent updates on this topic in my database.",
+                sources=[] 
+            )
+        
+        context_string = format_docs(context_docs)
+        curr_date = datetime.now().strftime("%A, %B %d, %Y")
+
+        response = chain.invoke({
+            "curr_date": curr_date,
+            "context": context_string,
+            "question": standalone_question
+        })
+
+        if session_id and session_id != "null":
+            save_message_to_redis(session_id, "user", user_question)
+            save_message_to_redis(session_id, "ai", response.answer)
+
+        return response
+
+    except Exception as e:
+        logger.critical(f"Engine Critical Error: {e}")
+        
         return LLM_Response_Format(
-            answer="I couldn't find any recent updates on this topic in my database.",
-            sources=[] 
+            answer="I am currently experiencing high traffic or a temporary system error. Please try again in a moment.",
+            sources=[]
         )
-    
-    context_string = format_docs(context_docs)
-    curr_date = datetime.now().strftime("%A, %B %d, %Y")
-
-    response = chain.invoke({
-        "curr_date" : curr_date,
-        "context": context_string,
-        "question": standalone_question
-    })
-
-    return response
-
 
 
 # print("Hello here in the retriver!!")
