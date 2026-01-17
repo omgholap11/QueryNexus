@@ -19,7 +19,11 @@ def get_ollama_local():
     model = ChatHuggingFace(llm = llm)
     return model
 
-def get_gemini_flash():
+def get_gemini_25_flash_lite():
+    model = init_chat_model('google_genai:gemini-2.5-flash-lite')
+    return model
+
+def get_gemini_25_flash():
     model = init_chat_model('google_genai:gemini-2.5-flash')
     return model
 

@@ -1,4 +1,4 @@
-from app.AI_Engine.vector_store import get_vector_store
+from Backend.app.AI_Engine.v3_vector_store import get_vector_store
 
 def add_documents_to_vectordb(documents):
     if not documents:

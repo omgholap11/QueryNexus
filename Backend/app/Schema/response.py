@@ -1,7 +1,7 @@
 from pydantic import BaseModel , Field
 from typing import Annotated , List
 
-class LLM_Response(BaseModel):
+class LLM_Response_Format(BaseModel):
 
     answer : Annotated[str , Field(title="The direct answer to the user's question. Use Markdown bolding for prices/metrics. Do NOT include a 'Sources' section here.")]
 

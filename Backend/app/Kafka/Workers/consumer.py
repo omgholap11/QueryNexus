@@ -1,7 +1,7 @@
 import json
 from kafka import KafkaConsumer
 from app.APIs.Services.smart_scrape import smart_scrapper
-from app.AI_Engine.pipeline import process_and_store_news
+from Backend.app.AI_Engine.v4_ingest_vdb import process_and_store_news
 
 def get_consumer():
     consumer = KafkaConsumer(
