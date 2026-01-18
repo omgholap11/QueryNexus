@@ -2,6 +2,7 @@ import hashlib
 from app.Services.redis_client import get_redis_client
 import json
 from redis import RedisError
+from langchain_core.messages import HumanMessage , AIMessage
 
 WINDOW_SIZE = 6       
 SESSION_TTL = 3600  ## 1 hour
@@ -36,7 +37,7 @@ def check_and_cache_to_redis(url):
 
 def save_message_to_redis(session_id: str, role: str, content: str):
        
-    key = f"chat:{session_id}"   
+    key = f"chat: {session_id}"   
     message_data = {
         "role": role,       # "user" or "ai"
         "content": content,
@@ -61,4 +62,22 @@ def save_message_to_redis(session_id: str, role: str, content: str):
         print(f"Failed to save {role} message to {key}: {e}")
           
 
+def retrive_chat_history_from_redis(session_id : str):
+    chat_history = []
+    key = f"chat: {session_id}"
+    try:
+        redis_client = get_redis_client()
+        raw_history = redis_client.lrange(key , 0,-1);
+        for chat in raw_history:
+            data = json.loads(chat)
+            role = data.get('role')
+            content = data.get('content')
 
+            if role == 'user':
+                chat_history.append(HumanMessage(content=content))
+            elif role == 'ai':
+                chat_history.append(AIMessage(content=content))
+        return chat_history
+    except Exception as e:
+        print(f"Error occured while saving the message in chat: {e}")
+        return []
