@@ -47,3 +47,27 @@
     animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
+
+/* Sonner Toast Styling */
+[data-sonner-toast] {
+  background: #000000 !important;
+  border-radius: 8px !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  border: 1px solid #007ACC !important;
+  color: #007ACC !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon] svg {
+  color: #007ACC !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  border: 1px solid #EF4444 !important;
+  color: #EF4444 !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] svg {
+  color: #EF4444 !important;
+}
