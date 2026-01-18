@@ -1,75 +1,103 @@
 import React from 'react';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
     return (
         <aside className={`
-      w-[260px] bg-surface-dark border-r border-border-dark flex flex-col h-screen shrink-0 z-30
-      fixed md:relative transition-transform duration-300 ease-in-out
-      ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-    `}>
-            <div className="p-6 flex flex-col h-full">
-                {/* Logo */}
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="size-8 bg-primary rounded-lg flex items-center justify-center">
-                        <span className="material-symbols-outlined text-background-dark font-bold">bolt</span>
+            ${isCollapsed ? 'w-0 md:w-16' : 'w-[280px]'} 
+            bg-surface-dark flex flex-col h-screen shrink-0 z-50 
+            transition-all duration-300 fixed md:relative
+            ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+            <div className="p-4 flex flex-col h-full overflow-hidden">
+                {/* Collapsed State - Only hamburger and new chat */}
+                {isCollapsed && (
+                    <div className="hidden md:flex flex-col items-center gap-4">
+                        <button
+                            onClick={onToggleCollapse}
+                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="Expand sidebar"
+                        >
+                            <span className="material-symbols-outlined text-[22px]">menu</span>
+                        </button>
+                        <button
+                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="New chat"
+                        >
+                            <span className="material-symbols-outlined text-[22px]">add</span>
+                        </button>
                     </div>
-                    <div className="flex flex-col">
-                        <h1 className="text-white text-base font-bold tracking-tight">VeloMarketSense</h1>
-                        <p className="text-primary/70 text-[10px] uppercase tracking-widest font-bold">Ocean Data AI</p>
-                    </div>
-                    {/* Close button for mobile */}
-                    <button onClick={onClose} className="md:hidden ml-auto text-slate-400">
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
-                </div>
+                )}
 
-                {/* New Research Button */}
-                <button className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary text-background-dark rounded-lg font-bold text-sm mb-8 hover:brightness-110 transition-all duration-200 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                    <span className="material-symbols-outlined text-[20px]">add_circle</span>
-                    New Research
-                </button>
+                {/* Expanded State */}
+                {!isCollapsed && (
+                    <>
+                        {/* Top Row - Hamburger & Search */}
+                        <div className="flex items-center justify-between mb-6">
+                            <button
+                                onClick={onToggleCollapse}
+                                className="hidden md:flex text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="Collapse sidebar"
+                            >
+                                <span className="material-symbols-outlined text-[22px]">menu</span>
+                            </button>
+                            {/* Mobile Close button */}
+                            <button onClick={onClose} className="md:hidden text-slate-400 p-2">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
 
-                {/* Navigation */}
-                <div className="space-y-1 mb-8">
-                    <div className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-primary transition-colors cursor-pointer group">
-                        <span className="material-symbols-outlined text-[20px]">dashboard</span>
-                        <p className="text-sm font-medium">Terminal Overview</p>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-primary transition-colors cursor-pointer">
-                        <span className="material-symbols-outlined text-[20px]">monitoring</span>
-                        <p className="text-sm font-medium">Market Pulse</p>
-                    </div>
-                </div>
+                            <button className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
+                                <span className="material-symbols-outlined text-[22px]">search</span>
+                            </button>
+                        </div>
 
-                {/* Recent Activity */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <p className="px-3 mb-3 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Recent Activity</p>
-                    <div className="space-y-0.5">
-                        {[
-                            { icon: 'description', text: 'HDFC Bank Q3 Analysis', active: true },
-                            { icon: 'water_drop', text: 'Crude Oil Forecast' },
-                            { icon: 'query_stats', text: 'Tata Motors Trends' },
-                            { icon: 'analytics', text: 'EV Sector Benchmark' }
-                        ].map((item, idx) => (
-                            <div key={idx} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors group ${item.active ? 'bg-white/5 border border-primary/30 text-slate-200' : 'hover:bg-white/5 text-slate-400'}`}>
-                                <span className={`material-symbols-outlined text-[18px] ${item.active ? 'text-primary' : 'group-hover:text-primary'}`}>{item.icon}</span>
-                                <p className="text-xs font-medium truncate">{item.text}</p>
+                        {/* New Chat Button */}
+                        <button className="flex items-center gap-3 w-full px-4 py-3 bg-[#2F3133] hover:bg-[#3C3F41] text-white rounded-full font-medium text-sm mb-6 transition-all duration-200">
+                            <span className="material-symbols-outlined text-[20px]">add</span>
+                            New chat
+                        </button>
+
+                        {/* My Stuff Section */}
+                        <div className="mb-4">
+                            <button className="flex items-center justify-between w-full px-3 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <span className="text-sm font-medium">My stuff</span>
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
+
+                        {/* Gems Section */}
+                        <div className="mb-4">
+                            <button className="flex items-center justify-between w-full px-3 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <span className="text-sm font-medium">Gems</span>
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
+
+                        {/* Chats Section */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <p className="px-3 mb-2 text-sm font-medium text-slate-400">Chats</p>
+                            <div className="space-y-0.5">
+                                {[
+                                    { text: 'HDFC Bank Q3 Analysis', active: true },
+                                    { text: 'Crude Oil Forecast' },
+                                    { text: 'Tata Motors Trends' },
+                                    { text: 'EV Sector Benchmark' }
+                                ].map((item, idx) => (
+                                    <div key={idx} className={`flex items-center px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${item.active ? 'bg-primary/30 text-white border border-primary/50' : 'hover:bg-white/5 text-slate-400'}`}>
+                                        <p className="text-sm truncate">{item.text}</p>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
 
-                {/* Footer Settings */}
-                <div className="pt-4 mt-4 border-t border-border-dark">
-                    <div className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-primary cursor-pointer transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">settings</span>
-                        <p className="text-sm font-medium">Settings</p>
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-primary cursor-pointer transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">help</span>
-                        <p className="text-sm font-medium">Support</p>
-                    </div>
-                </div>
+                        {/* Footer - Settings & Help */}
+                        <div className="pt-4 mt-auto border-t border-white/5">
+                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">settings</span>
+                                <span className="text-sm">Settings and help</span>
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
         </aside>
     );

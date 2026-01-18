@@ -18,7 +18,8 @@ USER QUESTION: {question}
 2. **Citation Style:** You MUST cite your sources inline. Format: "News Headline (Source Name)".
 3. **Time Awareness:** The news context contains dates, prioritize the most recent information.
 4. **Key Details:** Use bullet points for specific metrics or events.
-5. **Sources Field:** Extract all unique URLs from the context used in your answer and put them in the 'sources' list.
+5. **Formatting:** Use Markdown bullet points (start lines with *) for lists.**DO NOT use HTML tags** (like <ul>, <li>, <br>).
+6. **Sources Field:** Extract all unique URLs from the context used in your answer and put them in the 'sources' list.
 
 {format_instructions}
 """
