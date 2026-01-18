@@ -35,17 +35,7 @@ def get_news_finnhub():
         print(f"News fetched Successfully: {len(all_news)}")
 
         final_news = []
-        skipped_count = 0
         for news in all_news:
-
-            news_ts = news.get('datetime')
-            if not news_ts:
-                continue 
-
-            # If the news is older than our cutoff, skip it
-            if news_ts < cutoff_time:
-                skipped_count += 1
-                continue
 
             final_news.append(
                 {

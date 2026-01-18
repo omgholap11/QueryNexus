@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from app.AI_Engine.llm_models import get_gemini_25_flash_lite
 from langchain_core.output_parsers import StrOutputParser
-from app.Services.redis_client import retrive_chat_history_from_redis
+from app.Services.redis_service import retrive_chat_history_from_redis
 
 REWRITER_PROMPT_TEMPLATE = """
 You are a Search Query Refiner.

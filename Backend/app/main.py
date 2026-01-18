@@ -1,17 +1,14 @@
 from fastapi import FastAPI
-from Backend.app.AI_Engine.response_pipeline import get_response
-app = FastAPI()
-from pydantic import BaseModel
 from app.Routes.user import userrouter
 from app.Models.user import Base
 from app.Config.Database.database import engine
 from fastapi.middleware.cors import CORSMiddleware
+from app.Routes.chat import chat_router
 
+app = FastAPI()
 ## will load all the tables 
 Base.metadata.create_all(bind=engine)
 
-class input_data(BaseModel):
-    payload : str
 
 origins = [
     "http://localhost:5173",
@@ -27,23 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/api/response")
-def getResponse(
-    payload : input_data
-):
-    print(payload)
-    dicti = payload.model_dump()
-    print(dicti)
-    response = get_response(dicti['payload'])
-    print(response)
-    return {"msg" : response }
+
 
 print("Om Gholap")
 
-
-
 app.include_router(userrouter , prefix="/api/user")
 
+app.include_router(chat_router , prefix = "/api/chat")
 
 
 

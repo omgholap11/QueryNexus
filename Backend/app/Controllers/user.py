@@ -74,7 +74,7 @@ def handle_user_signup(payload , res , db):
         )
 
 
-def handle_user_sign_in(payload , res , db : Session):
+def handle_user_sign_in(payload , res , db):
     user_data = payload.model_dump()
     print(user_data)
     existing_user = db.query(UserModel).filter(UserModel.email == user_data['email']).first()

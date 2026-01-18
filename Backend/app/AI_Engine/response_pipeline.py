@@ -53,12 +53,12 @@ def generate_llm_response(user_question: str, session_id: str):
 
     try:
         context_docs = retriver.invoke(standalone_question)
-        print(f"🔹 Contextual Docs Found: {len(context_docs)}")
+        print(f"Contextual Docs Found: {len(context_docs)}")
 
         if not context_docs:
             return LLM_Response_Format(
                 answer="I couldn't find any recent updates on this topic in my database.",
-                sources=[] 
+                source=[] 
             )
         
         context_string = format_docs(context_docs)
@@ -86,8 +86,8 @@ def generate_llm_response(user_question: str, session_id: str):
 
 
 # print("Hello here in the retriver!!")
-# print(get_response("The much-awaited Union Budget for the financial year 2026-27 will be presented by"))
-# print(get_response("latest news related to the monday holiday is ?"))
+# print(generate_llm_response("The much-awaited Union Budget for the financial year 2026-27 will be presented by" , "vms-user-chat-123"))
+print(generate_llm_response("latest news related to the monday holiday is ?" , "12356"))
 # print(get_response("Who will win today maxverstappen or lando norris?"))
 # print(get_response("what is the latest news related to the tariffs?"))
 # print(get_response("What happened about the netflix and warner bros deal?"))
