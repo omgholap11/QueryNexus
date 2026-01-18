@@ -6,6 +6,7 @@ export default function Dashboard() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [sessionId, setSessionId] = useState(null);
     const textareaRef = useRef(null);
     const messagesEndRef = useRef(null);
 
@@ -30,22 +31,40 @@ export default function Dashboard() {
 
         const userMessage = { type: 'user', content: input };
         setMessages(prev => [...prev, userMessage]);
+
+        // Keep input for reference if needed, but clear UI
+        const currentInput = input;
         setInput("");
         setIsLoading(true);
 
         try {
-            // Updated to match the backend Pydantic model (input_data)
-            const response = await axios.post('http://localhost:8000/api/response', {
-                payload: input
-            });
+            // Construct payload as requested
+            const payload = {
+                payload: {
+                    question: currentInput,
+                    session_id: sessionId ? sessionId : "null"
+                }
+            };
 
-            // Handle response: Backend returns { "msg": "..." }
-            const responseContent = response.data?.msg || response.data?.response || response.data?.message || JSON.stringify(response.data);
-            const aiMessage = { type: 'ai', content: responseContent };
+            const response = await axios.post('http://localhost:8000/api/chat/getresponse', payload);
+
+            // Destructure response: { answer, source, session_id }
+            const { answer, source, session_id } = response.data;
+
+            // Update session ID if received (and strictly not null/undefined)
+            if (session_id && session_id !== "null") {
+                setSessionId(session_id);
+            }
+
+            const aiMessage = {
+                type: 'ai',
+                content: answer,
+                sources: source || []
+            };
             setMessages(prev => [...prev, aiMessage]);
         } catch (error) {
             console.error("Error fetching response:", error);
-            const errorMessage = { type: 'ai', content: "Unable to connect to VeloMarketSense engine. Please ensure the backend is running." };
+            const errorMessage = { type: 'ai', content: "Unable to connect or process request. Please check backend." };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
@@ -91,6 +110,35 @@ export default function Dashboard() {
                                     : 'bg-surface-dark border border-white/10 text-slate-200 rounded-tl-sm shadow-lg'
                                     }`}>
                                     {msg.content}
+
+                                    {/* Sources rendering */}
+                                    {msg.sources && msg.sources.length > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-white/10">
+                                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">link</span>
+                                                Sources
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {msg.sources.map((src, i) => (
+                                                    <a
+                                                        key={i}
+                                                        href={src}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs bg-white/5 hover:bg-white/10 text-primary/80 hover:text-primary px-2 py-1 rounded transition-colors truncate max-w-full"
+                                                    >
+                                                        {(() => {
+                                                            try {
+                                                                return new URL(src).hostname.replace('www.', '');
+                                                            } catch {
+                                                                return src;
+                                                            }
+                                                        })()}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

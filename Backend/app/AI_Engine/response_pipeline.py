@@ -87,7 +87,7 @@ def generate_llm_response(user_question: str, session_id: str):
 
 # print("Hello here in the retriver!!")
 # print(generate_llm_response("The much-awaited Union Budget for the financial year 2026-27 will be presented by" , "vms-user-chat-123"))
-print(generate_llm_response("latest news related to the monday holiday is ?" , "12356"))
+# print(generate_llm_response("latest news related to the monday holiday is ?" , "12356"))
 # print(get_response("Who will win today maxverstappen or lando norris?"))
 # print(get_response("what is the latest news related to the tariffs?"))
 # print(get_response("What happened about the netflix and warner bros deal?"))
