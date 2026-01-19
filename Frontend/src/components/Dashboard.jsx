@@ -207,7 +207,10 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSend();
+            // Don't send if loading or streaming
+            if (!isLoading && streamingIndex === null) {
+                handleSend();
+            }
         }
     };
 
@@ -220,10 +223,10 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             onClick={onClick}
             title={title}
             className={`rounded-full transition-all p-2 ${isActive
-                    ? 'text-primary bg-primary/10'
-                    : isCopied
-                        ? 'text-green-400 bg-green-400/10'
-                        : 'text-slate-400 hover:text-white hover:bg-white/10'
+                ? 'text-primary bg-primary/10'
+                : isCopied
+                    ? 'text-green-400 bg-green-400/10'
+                    : 'text-slate-400 hover:text-white hover:bg-white/10'
                 }`}
         >
             <span className="material-symbols-outlined text-[18px] md:text-[20px]">
@@ -287,9 +290,6 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                                             title="Copy"
                                                             isCopied={copiedId === `user-${idx}`}
                                                         />
-                                                        {idx === lastUserIndex && (
-                                                            <IconBtn icon="edit" onClick={() => handleEdit(idx, msg.content)} title="Edit" />
-                                                        )}
                                                     </div>
                                                 </>
                                             )}
@@ -381,9 +381,6 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                                             isActive={dislikedMessages[idx]}
                                                         />
                                                         <IconBtn icon="share" onClick={() => { }} title="Share" />
-                                                        {idx === lastAiIndex && (
-                                                            <IconBtn icon="refresh" onClick={handleRegenerate} title="Regenerate" />
-                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -412,33 +409,34 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             </div>
 
             <div className="w-full px-4 py-4 bg-background-dark">
-                <div className="w-full max-w-3xl mx-auto relative bg-[#1E1F20] rounded-full border border-white/10 focus-within:border-primary/50 transition-all duration-200 flex items-end">
+                <div className="w-full max-w-3xl mx-auto relative bg-[#1E1F20] rounded-2xl border border-white/10 focus-within:border-primary/50 transition-all duration-200">
+                    <div className="flex items-end">
+                        <textarea
+                            ref={textareaRef}
+                            rows={1}
+                            autoFocus
+                            className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 py-4 text-sm md:text-base max-h-[200px]"
+                            placeholder="Ask VeloMarketSense..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            style={{ minHeight: '56px' }}
+                        />
 
-                    <textarea
-                        ref={textareaRef}
-                        rows={1}
-                        autoFocus
-                        className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar pl-4 md:pl-6 py-3 md:py-4 rounded-3xl text-sm md:text-base max-h-[150px]"
-                        placeholder="Ask VeloMarketSense..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        style={{ minHeight: '48px' }}
-                    />
-
-                    <div className="flex items-center pr-2 pb-1.5 md:pb-2 h-[48px] md:h-[52px]">
-                        <button
-                            onClick={() => handleSend()}
-                            disabled={!input.trim() || isLoading}
-                            className={`
-                                size-9 md:size-10 rounded-full flex items-center justify-center transition-all duration-200
-                                ${input.trim()
-                                    ? 'bg-primary text-white hover:brightness-110'
-                                    : 'bg-transparent text-slate-600 cursor-not-allowed'}
-                            `}
-                        >
-                            <span className="material-symbols-outlined text-[18px] md:text-[20px]">arrow_upward</span>
-                        </button>
+                        <div className="flex items-center pr-3 pb-3">
+                            <button
+                                onClick={() => handleSend()}
+                                disabled={!input.trim() || isLoading || streamingIndex !== null}
+                                className={`
+                                    size-10 rounded-full flex items-center justify-center transition-all duration-200
+                                    ${input.trim() && !isLoading && streamingIndex === null
+                                        ? 'bg-primary text-white hover:brightness-110'
+                                        : 'bg-transparent text-slate-600 cursor-not-allowed'}
+                                `}
+                            >
+                                <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">

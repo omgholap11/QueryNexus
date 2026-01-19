@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     const [mode, setMode] = useState('signin');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -52,17 +53,71 @@ export default function AuthModal({ isOpen, onClose }) {
 
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            // Use relative URL - Vite proxy forwards to backend
+            const baseUrl = '/api/user';
+
             if (mode === 'signin') {
+                // Sign In API call
+                const response = await axios.post(`${baseUrl}/signin`, {
+                    email: email,
+                    password: password
+                }, {
+                    withCredentials: true  // Required for cookies to be set
+                });
+
                 toast.success('Welcome back! Signed in successfully');
+
+                // Fetch user details after successful sign in
+                const userResponse = await axios.get(`${baseUrl}/user-details`, {
+                    withCredentials: true
+                });
+
+                // Call onAuthSuccess with user data to update Redux state
+                if (onAuthSuccess && userResponse.data.user) {
+                    onAuthSuccess(userResponse.data.user);
+                }
+
             } else {
+                // Sign Up API call
+                const response = await axios.post(`${baseUrl}/signup`, {
+                    name: name,
+                    email: email,
+                    password: password
+                }, {
+                    withCredentials: true  // Required for cookies to be set
+                });
+
                 toast.success('Account created successfully!');
+
+                // Fetch user details after successful sign up
+                const userResponse = await axios.get(`${baseUrl}/user-details`, {
+                    withCredentials: true
+                });
+
+                // Call onAuthSuccess with user data to update Redux state
+                if (onAuthSuccess && userResponse.data.user) {
+                    onAuthSuccess(userResponse.data.user);
+                }
             }
-            onClose();
+
             resetForm();
-        }, 1500);
+
+        } catch (error) {
+            console.error('Auth error:', error);
+
+            // Handle error response from backend
+            if (error.response && error.response.data) {
+                const errorMessage = error.response.data.detail || error.response.data.message || 'Authentication failed';
+                toast.error(errorMessage);
+            } else if (error.request) {
+                toast.error('Unable to connect to server. Please try again.');
+            } else {
+                toast.error('An unexpected error occurred');
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const resetForm = () => {

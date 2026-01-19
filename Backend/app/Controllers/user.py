@@ -1,8 +1,9 @@
 from fastapi import HTTPException 
 from app.Models.user import UserModel
 from sqlalchemy.orm import Session
-from app.Services.authentication import generate_token
+from app.Services.authentication import generate_token , verify_token
 from passlib.context import CryptContext
+from fastapi.responses import JSONResponse  
 
 pwd_context = CryptContext(schemes = ["bcrypt"] , deprecated = "auto")
 
@@ -25,7 +26,7 @@ def handle_user_signup(payload , res , db):
     hashed_password = get_hash_password(password)
     user_data['password'] = hashed_password
     user_model = UserModel(**user_data)  ## for dictionary parsing rught 
-
+    print("Cmes here ")
     if user_model is None:
         raise HTTPException(status_code=400 , detail = "Invalid Data Provided")
     try:
@@ -51,8 +52,8 @@ def handle_user_signup(payload , res , db):
                 key='token',
                 value=token,
                 httponly = True,
-                max_age = 4320,
-                expires = 4320,
+                max_age = 259200,
+                expires = 259200,
                 samesite = 'lax',
                 secure = False
             )
@@ -67,7 +68,7 @@ def handle_user_signup(payload , res , db):
             )
     
     except Exception as e:
-        print(f"Error occured during signing up the user!  {user_data}")
+        print(f"Error occured during signing up the user!  {e}")
         raise HTTPException(
             status_code=500,
             detail="User sign up failed!!"
@@ -108,8 +109,8 @@ def handle_user_sign_in(payload , res , db):
             key='token',
             value=token,
             httponly = True,
-            max_age = 4320,
-            expires = 4320,
+            max_age = 259200,
+            expires = 259200,
             samesite = 'lax',
             secure = False
         )
@@ -123,6 +124,33 @@ def handle_user_sign_in(payload , res , db):
         detail="User sign up failed!!"
     )
 
+def handle_get_user_details(req , db):
+    token = req.cookies.get('token') 
+    print(f"Getting user Tokens: {token}")   
+    if not token:
+        raise HTTPException(status_code=401 , detail="Unauthorized")
+    try:
+        payload = verify_token(token)
+        if not payload:
+            raise HTTPException(status_code=401 , detail="Unauthorized")
+
+        print(f"Authenticated User! {payload}")
+        
+        return JSONResponse(status_code=200, content={
+            "msg": "User Details Fetched Successfully!!",
+            "user": {
+                "id": payload.get("id"),
+                "name": payload.get("name"),
+                "email": payload.get("email")
+            }
+        })    
+        
+    except Exception as e:
+        print(f"Error occured while getting user details!  {e}")
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized"
+        )
 
 
 

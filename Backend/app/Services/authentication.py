@@ -17,6 +17,7 @@ def generate_token(user_data : dict):
 
     expiry = datetime.utcnow() + timedelta(hours=72)
     to_encode.update({'exp' : expiry})
+    to_encode['id'] = str(to_encode['id'])
     try:
         jwt_token = jwt.encode(to_encode , JWT_SECRET_KEY , algorithm=ALGORITHM)
         print(f"JWT Token Generated: {jwt_token}")
@@ -28,7 +29,7 @@ def generate_token(user_data : dict):
 
 def verify_token(token : str):
     try:
-        payload = jwt.decode(token , JWT_SECRET_KEY , algorithm=ALGORITHM)
+        payload = jwt.decode(token , JWT_SECRET_KEY , algorithms=[ALGORITHM])
         return payload
     
     except jwt.ExpiredSignatureError:

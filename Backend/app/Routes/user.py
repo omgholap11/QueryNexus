@@ -1,8 +1,8 @@
-from fastapi import APIRouter , Depends , Response
+from fastapi import APIRouter , Depends , Response , Request
 from app.Schema.user import UserSchema , UserSignInSchema
 from app.Config.Database.database import get_db  
 from sqlalchemy.orm import Session
-from app.Controllers.user import handle_user_signup , handle_user_sign_in
+from app.Controllers.user import handle_user_signup , handle_user_sign_in , handle_get_user_details
 
 userrouter = APIRouter()
 
@@ -21,4 +21,11 @@ def signin(
     db : Session = Depends(get_db)
 ):
     return handle_user_sign_in(payload , res , db)
+
+@userrouter.get("/user-details")
+def get_user_details(
+    req : Request,
+    db : Session = Depends(get_db)
+):
+    return handle_get_user_details(req , db)
 
