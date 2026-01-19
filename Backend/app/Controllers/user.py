@@ -124,7 +124,7 @@ def handle_user_sign_in(payload , res , db):
         detail="User sign up failed!!"
     )
 
-def handle_get_user_details(req , db):
+def handle_get_user_details(req):
     token = req.cookies.get('token') 
     print(f"Getting user Tokens: {token}")   
     if not token:

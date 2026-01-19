@@ -244,18 +244,70 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 <div className={`w-full max-w-3xl mx-auto transition-all duration-500 ease-in-out min-h-full flex flex-col px-4 ${hasMessages ? 'justify-start pt-6 md:pt-8' : 'items-center justify-center'}`}>
 
                     {!hasMessages && (
-                        <div className="text-center mb-16 animate-fade-in-up relative z-10 w-full">
-                            <div className="flex justify-center mb-6">
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm">
-                                    <span className="material-symbols-outlined text-[48px] md:text-[64px] text-primary animate-pulse-slow">bolt</span>
+                        <div className="text-center animate-fade-in-up relative z-10 w-full -mt-16 md:-mt-24">
+                            {/* Logo */}
+                            <div className="flex justify-center mb-4 md:mb-5">
+                                <div className="size-12 md:size-14 bg-primary rounded flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-[24px] md:text-[28px]">bolt</span>
                                 </div>
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-4">
-                                Unlock Market Intelligence
-                            </h2>
-                            <p className="text-slate-400 text-base md:text-lg font-light max-w-lg mx-auto leading-relaxed">
-                                Real-time analysis fueled by <span className="text-primary font-semibold">Live Data</span> and <span className="text-purple-400 font-semibold">Deep RAG</span> chains.
+                            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2 md:mb-3">
+                                VeloMarketSense
+                            </h1>
+                            <p className="text-slate-400 text-base md:text-lg font-light mb-8 md:mb-10">
+                                Navigate the Market with Velocity.
                             </p>
+
+                            {/* Input Field - Centered */}
+                            <div className="w-full max-w-2xl mx-auto">
+                                <div className="relative bg-surface-dark rounded-2xl border border-border-dark focus-within:border-primary/50 transition-all duration-200">
+                                    <textarea
+                                        ref={textareaRef}
+                                        rows={1}
+                                        autoFocus
+                                        className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
+                                        placeholder="Ask VeloMarketSense anything"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        style={{ minHeight: '50px' }}
+                                    />
+                                    <div className="flex items-center justify-between px-3 pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-8 bg-primary rounded flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-white text-[16px]">bolt</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setResearchActive(!researchActive)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${researchActive
+                                                    ? 'bg-primary text-white'
+                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                    }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">all_inclusive</span>
+                                                Research
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <button
+                                                onClick={() => handleSend()}
+                                                disabled={!input.trim() || isLoading || streamingIndex !== null}
+                                                className={`
+                                                    size-8 rounded flex items-center justify-center transition-all duration-200
+                                                    ${input.trim() && !isLoading && streamingIndex === null
+                                                        ? 'bg-primary text-white hover:brightness-110'
+                                                        : 'bg-transparent text-slate-600 cursor-not-allowed'}
+                                                `}
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
+                                    VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -409,70 +461,60 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 </div>
             </div>
 
-            <div className="w-full px-4 py-4 bg-background-dark">
-                <div className="w-full max-w-3xl mx-auto">
-                    {/* Input Container */}
-                    <div className="relative bg-surface-dark rounded-2xl border border-border-dark focus-within:border-primary/50 transition-all duration-200">
-                        {/* Textarea */}
-                        <textarea
-                            ref={textareaRef}
-                            rows={1}
-                            autoFocus
-                            className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
-                            placeholder="Ask VeloMarketSense anything"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            style={{ minHeight: '50px' }}
-                        />
-
-                        {/* Bottom Actions Bar */}
-                        <div className="flex items-center justify-between px-3 pb-3">
-                            {/* Left Actions */}
-                            <div className="flex items-center gap-2">
-                                {/* Logo/Icon - rectangular */}
-                                <div className="size-8 bg-primary rounded flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-white text-[16px]">bolt</span>
+            {/* Bottom Input - Only show when has messages */}
+            {hasMessages && (
+                <div className="w-full px-4 py-4 bg-background-dark">
+                    <div className="w-full max-w-3xl mx-auto">
+                        <div className="relative bg-surface-dark rounded-2xl border border-border-dark focus-within:border-primary/50 transition-all duration-200">
+                            <textarea
+                                ref={textareaRef}
+                                rows={1}
+                                autoFocus
+                                className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
+                                placeholder="Ask VeloMarketSense anything"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                style={{ minHeight: '50px' }}
+                            />
+                            <div className="flex items-center justify-between px-3 pb-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="size-8 bg-primary rounded flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-white text-[16px]">bolt</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setResearchActive(!researchActive)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${researchActive
+                                            ? 'bg-primary text-white'
+                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">all_inclusive</span>
+                                        Research
+                                    </button>
                                 </div>
-
-                                {/* Research Toggle Button */}
-                                <button
-                                    onClick={() => setResearchActive(!researchActive)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${researchActive
-                                        ? 'bg-primary text-white'
-                                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">all_inclusive</span>
-                                    Research
-                                </button>
-                            </div>
-
-                            {/* Right Actions - Only Send Button */}
-                            <div className="flex items-center">
-                                {/* Send Button */}
-                                <button
-                                    onClick={() => handleSend()}
-                                    disabled={!input.trim() || isLoading || streamingIndex !== null}
-                                    className={`
-                                        size-8 rounded flex items-center justify-center transition-all duration-200
-                                        ${input.trim() && !isLoading && streamingIndex === null
-                                            ? 'bg-primary text-white hover:brightness-110'
-                                            : 'bg-transparent text-slate-600 cursor-not-allowed'}
-                                    `}
-                                >
-                                    <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
-                                </button>
+                                <div className="flex items-center">
+                                    <button
+                                        onClick={() => handleSend()}
+                                        disabled={!input.trim() || isLoading || streamingIndex !== null}
+                                        className={`
+                                            size-8 rounded flex items-center justify-center transition-all duration-200
+                                            ${input.trim() && !isLoading && streamingIndex === null
+                                                ? 'bg-primary text-white hover:brightness-110'
+                                                : 'bg-transparent text-slate-600 cursor-not-allowed'}
+                                        `}
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
+                            VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
+                        </p>
                     </div>
-
-                    {/* Disclaimer */}
-                    <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
-                        VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
-                    </p>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

@@ -25,7 +25,6 @@ def signin(
 @userrouter.get("/user-details")
 def get_user_details(
     req : Request,
-    db : Session = Depends(get_db)
 ):
-    return handle_get_user_details(req , db)
+    return handle_get_user_details(req)
 

@@ -51,7 +51,7 @@ export default function Header({ title }) {
 
     return (
         <>
-            <header className="flex items-center justify-end px-4 py-3 sticky top-0 z-10 bg-background-dark border-b border-border-dark min-h-[56px]">
+            <header className="flex items-center justify-end px-4 py-3 sticky top-0 z-10 bg-background-dark min-h-[56px]">
                 {/* Right side - Actions */}
                 <div className="flex items-center gap-2 h-9">
                     <button className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors">
