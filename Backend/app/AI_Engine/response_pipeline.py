@@ -1,17 +1,21 @@
 from app.AI_Engine.v3_vector_store import get_vector_store
 from langchain_core.output_parsers import PydanticOutputParser 
 from app.AI_Engine.llm_models import get_gemini_25_flash , get_gemini_25_flash_lite , get_ollama_local
-from datetime import datetime
+from datetime import datetime , timedelta
 from app.Schema.response import LLM_Response_Format
 from app.AI_Engine.prompt_with_str_output import get_prompt_with_str_output 
 from app.AI_Engine.prompt_with_output_parser import get_prompt_with_output_parsers
-from app.AI_Engine.rewriter_pipeline import get_standalone_question
+from app.AI_Engine.rewriter_pipeline import get_detailed_question
 from app.Services.redis_service import save_message_to_redis
 
 vector_store = get_vector_store()
 retriver = vector_store.as_retriever(
     search_type="mmr",
-    search_kwargs = {'k' : 5}
+    search_kwargs = {
+        'k' : 5,
+        'fetch_k' : 20,
+        'lambda_mult' :0.5
+        },
 )
 
 prompt_template = get_prompt_with_str_output()
@@ -41,18 +45,48 @@ import logging
 logger = logging.getLogger(__name__)      ## for keeping the logs logs are pessited even if the terminal clear or was off 
 
 def generate_llm_response(user_question: str, session_id: str):
-    
+    detailed_question = {
+        "standalone_question": user_question, 
+        "is_date_specific": False,
+        "start_date": None,
+        "end_date": None
+        }
     try:
-        standalone_question = get_standalone_question(user_question, session_id)
-        print(f"Standalone Question: {standalone_question}")
+        rewriter_output = get_detailed_question(user_question, session_id)
+        if rewriter_output:
+            detailed_question = rewriter_output
+        print(f"Detailed Question: {detailed_question}")
 
     except Exception as e:
         logger.error(f"Rewriter Failed: {e}")
         print("Fallback: Using original question.")
-        standalone_question = user_question
 
     try:
-        context_docs = retriver.invoke(standalone_question)
+        context_docs = []
+        standalone_question = detailed_question['standalone_question']
+        if detailed_question['is_date_specific'] and detailed_question['start_date']:
+            start_date = detailed_question['start_date']
+            end_date = detailed_question['end_date']
+
+            end_date_obj = datetime.strptime(end_date , "%Y-%m-%d")
+            updated_end_date = (end_date_obj + timedelta(days=1)).strftime("%Y-%m-%d")       ## added one day in the end date to encounter the delay by the news apis as the free tier news api often become late for giving the informations 
+            filters = {
+                "date" : {
+                    "$gte" : start_date , 
+                    "$lte" : updated_end_date
+                }
+            }
+
+            context_docs = vector_store.similarity_search(
+                query=standalone_question,
+                filter = filters,
+                k = 5
+            )
+        
+        else:
+            context_docs = retriver.invoke(detailed_question['standalone_question'])
+
+
         print(f"Contextual Docs Found: {len(context_docs)}")
 
         if not context_docs:

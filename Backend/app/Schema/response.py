@@ -13,3 +13,10 @@ class user_chat_payload_fields(BaseModel):
 
 class User_Chat_Payload(BaseModel):
     payload : user_chat_payload_fields
+
+
+class SearchQuery(BaseModel):
+    standalone_query: str = Field(..., description="Optimized keyword search query")
+    is_date_specific: bool = Field(..., description="True if user mentioned a specific time")
+    start_date: Optional[str] = Field(None, description="ISO format (YYYY-MM-DD)")
+    end_date: Optional[str] = Field(None, description="ISO format (YYYY-MM-DD)")
