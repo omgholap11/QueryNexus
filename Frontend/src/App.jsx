@@ -32,19 +32,19 @@ function App() {
                 position="top-center"
                 toastOptions={{
                     style: {
-                        background: '#000000',
+                        background: '#0A0A0A',
                         color: '#fff',
                     },
                     success: {
                         style: {
-                            background: '#000000',
-                            color: '#007ACC',
-                            border: '1px solid #007ACC',
+                            background: '#171717',
+                            color: '#FF6B35',
+                            border: '1px solid #FF6B35',
                         },
                     },
                     error: {
                         style: {
-                            background: '#000000',
+                            background: '#0A0A0A',
                             color: '#EF4444',
                             border: '1px solid #EF4444',
                         },

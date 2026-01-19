@@ -60,6 +60,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const [dislikedMessages, setDislikedMessages] = useState({});
     const [copiedId, setCopiedId] = useState(null);
     const [streamingIndex, setStreamingIndex] = useState(null);
+    const [researchActive, setResearchActive] = useState(false);
     const textareaRef = useRef(null);
     const messagesEndRef = useRef(null);
 
@@ -297,8 +298,8 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                     ) : (
                                         <div className="flex gap-3 max-w-full w-full">
                                             <div className="shrink-0 mt-0.5">
-                                                <div className="size-8 md:size-9 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-primary text-[18px] md:text-[20px]">bolt</span>
+                                                <div className="size-8 md:size-9 rounded bg-primary flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-white text-[16px] md:text-[18px]">bolt</span>
                                                 </div>
                                             </div>
 
@@ -392,8 +393,8 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                             {isLoading && (
                                 <div className="flex gap-3 w-full animate-fade-in-up">
                                     <div className="shrink-0 mt-0.5">
-                                        <div className="size-8 md:size-9 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-primary text-[18px] md:text-[20px] animate-spin">sync</span>
+                                        <div className="size-8 md:size-9 rounded bg-primary flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-white text-[16px] md:text-[18px] animate-spin">sync</span>
                                         </div>
                                     </div>
                                     <div className="flex-1">
@@ -409,39 +410,68 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             </div>
 
             <div className="w-full px-4 py-4 bg-background-dark">
-                <div className="w-full max-w-3xl mx-auto relative bg-[#1E1F20] rounded-2xl border border-white/10 focus-within:border-primary/50 transition-all duration-200">
-                    <div className="flex items-end">
+                <div className="w-full max-w-3xl mx-auto">
+                    {/* Input Container */}
+                    <div className="relative bg-surface-dark rounded-2xl border border-border-dark focus-within:border-primary/50 transition-all duration-200">
+                        {/* Textarea */}
                         <textarea
                             ref={textareaRef}
                             rows={1}
                             autoFocus
-                            className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 py-4 text-sm md:text-base max-h-[200px]"
-                            placeholder="Ask VeloMarketSense..."
+                            className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
+                            placeholder="Ask VeloMarketSense anything"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            style={{ minHeight: '56px' }}
+                            style={{ minHeight: '50px' }}
                         />
 
-                        <div className="flex items-center pr-3 pb-3">
-                            <button
-                                onClick={() => handleSend()}
-                                disabled={!input.trim() || isLoading || streamingIndex !== null}
-                                className={`
-                                    size-10 rounded-full flex items-center justify-center transition-all duration-200
-                                    ${input.trim() && !isLoading && streamingIndex === null
-                                        ? 'bg-primary text-white hover:brightness-110'
-                                        : 'bg-transparent text-slate-600 cursor-not-allowed'}
-                                `}
-                            >
-                                <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
-                            </button>
+                        {/* Bottom Actions Bar */}
+                        <div className="flex items-center justify-between px-3 pb-3">
+                            {/* Left Actions */}
+                            <div className="flex items-center gap-2">
+                                {/* Logo/Icon - rectangular */}
+                                <div className="size-8 bg-primary rounded flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-[16px]">bolt</span>
+                                </div>
+
+                                {/* Research Toggle Button */}
+                                <button
+                                    onClick={() => setResearchActive(!researchActive)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors ${researchActive
+                                        ? 'bg-primary text-white'
+                                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">all_inclusive</span>
+                                    Research
+                                </button>
+                            </div>
+
+                            {/* Right Actions - Only Send Button */}
+                            <div className="flex items-center">
+                                {/* Send Button */}
+                                <button
+                                    onClick={() => handleSend()}
+                                    disabled={!input.trim() || isLoading || streamingIndex !== null}
+                                    className={`
+                                        size-8 rounded flex items-center justify-center transition-all duration-200
+                                        ${input.trim() && !isLoading && streamingIndex === null
+                                            ? 'bg-primary text-white hover:brightness-110'
+                                            : 'bg-transparent text-slate-600 cursor-not-allowed'}
+                                    `}
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Disclaimer */}
+                    <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
+                        VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
+                    </p>
                 </div>
-                <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
-                    VeloMarketSense can make mistakes. Verify important info.
-                </p>
             </div>
         </div>
     );

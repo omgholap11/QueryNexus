@@ -8,10 +8,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        "primary": "#007ACC",
-        "background-dark": "#131314",
-        "surface-dark": "#1E1F20",
-        "border-dark": "#3C4043",
+        // Orange accent (brighter like second image)
+        "primary": "#dc512bff",
+        "primary-light": "#FF8855",
+        "primary-dark": "#E55A2B",
+        // Unified dark backgrounds
+        "background-dark": "#121212",
+        "surface-dark": "#121212",
+        "surface-light": "#1A1A1A",
+        // Borders
+        "border-dark": "#2A2A2A",
+        "border-light": "#333333",
       },
       fontFamily: {
         "sans": ["Inter", "sans-serif"],
@@ -25,3 +32,4 @@ export default {
   },
   plugins: [],
 }
+

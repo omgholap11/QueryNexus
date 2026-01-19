@@ -149,8 +149,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center size-12 bg-primary/10 rounded-xl mb-4">
-                        <span className="material-symbols-outlined text-primary text-[28px]">bolt</span>
+                    <div className="inline-flex items-center justify-center size-12 bg-primary rounded mb-4">
+                        <span className="material-symbols-outlined text-white text-[28px]">bolt</span>
                     </div>
                     <h2 className="text-xl md:text-2xl font-bold text-white">
                         {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
@@ -179,7 +179,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                                         if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
                                     }}
                                     placeholder="Enter your name"
-                                    className={`w-full bg-[#1E1F20] border ${errors.name ? 'border-red-500' : 'border-white/10'} rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
+                                    className={`w-full bg-[#1E1F20] border ${errors.name ? 'border-red-500' : 'border-white/10'} rounded pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
                                 />
                             </div>
                             {errors.name && (
@@ -205,7 +205,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                                     if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
                                 }}
                                 placeholder="you@example.com"
-                                className={`w-full bg-[#1E1F20] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
+                                className={`w-full bg-[#1E1F20] border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
                             />
                         </div>
                         {errors.email && (
@@ -230,7 +230,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                                     if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
                                 }}
                                 placeholder="••••••••"
-                                className={`w-full bg-[#1E1F20] border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
+                                className={`w-full bg-[#1E1F20] border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm`}
                             />
                         </div>
                         {errors.password && (
@@ -245,7 +245,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-primary hover:brightness-110 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                        className="w-full bg-primary hover:brightness-110 text-white font-semibold py-3 rounded transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                     >
                         {isLoading ? (
                             mode === 'signin' ? 'Signing in...' : 'Creating account...'
@@ -263,7 +263,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 </div>
 
                 {/* Google Sign In (placeholder) */}
-                <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+                <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 rounded transition-all duration-200 flex items-center justify-center gap-2">
                     <svg className="size-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

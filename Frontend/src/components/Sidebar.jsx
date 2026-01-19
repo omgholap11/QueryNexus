@@ -1,29 +1,32 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
+    const user = useSelector((state) => state.auth.user);
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
     return (
         <aside className={`
-            ${isCollapsed ? 'w-0 md:w-16' : 'w-[280px]'} 
+            ${isCollapsed ? 'w-0 md:w-16' : 'w-[260px]'} 
             bg-surface-dark flex flex-col h-screen shrink-0 z-50 
             transition-all duration-300 fixed md:relative
             ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            border-r border-border-dark
         `}>
-            <div className="p-4 flex flex-col h-full overflow-hidden">
-                {/* Collapsed State - Only hamburger and new chat */}
+            <div className="p-3 flex flex-col h-full overflow-hidden">
+                {/* Collapsed State */}
                 {isCollapsed && (
-                    <div className="hidden md:flex flex-col items-center gap-4">
+                    <div className="hidden md:flex flex-col items-center gap-3 pt-2">
+                        {/* Logo */}
+                        <div className="size-10 bg-primary rounded-lg flex items-center justify-center">
+                            <span className="material-symbols-outlined text-white text-[20px]">bolt</span>
+                        </div>
                         <button
                             onClick={onToggleCollapse}
-                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
                             title="Expand sidebar"
                         >
-                            <span className="material-symbols-outlined text-[22px]">menu</span>
-                        </button>
-                        <button
-                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="New chat"
-                        >
-                            <span className="material-symbols-outlined text-[22px]">add</span>
+                            <span className="material-symbols-outlined text-[20px]">menu</span>
                         </button>
                     </div>
                 )}
@@ -31,50 +34,66 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 {/* Expanded State */}
                 {!isCollapsed && (
                     <>
-                        {/* Top Row - Hamburger & Search */}
+                        {/* Header - Logo & Actions */}
                         <div className="flex items-center justify-between mb-6">
-                            <button
-                                onClick={onToggleCollapse}
-                                className="hidden md:flex text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
-                                title="Collapse sidebar"
-                            >
-                                <span className="material-symbols-outlined text-[22px]">menu</span>
-                            </button>
-                            {/* Mobile Close button */}
-                            <button onClick={onClose} className="md:hidden text-slate-400 p-2">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
+                            {/* Logo */}
+                            <div className="flex items-center gap-2">
+                                <div className="size-9 bg-primary rounded flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-[18px]">bolt</span>
+                                </div>
+                            </div>
 
-                            <button className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
-                                <span className="material-symbols-outlined text-[22px]">search</span>
-                            </button>
+                            <div className="flex items-center gap-1">
+                                <button className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
+                                    <span className="material-symbols-outlined text-[20px]">search</span>
+                                </button>
+                                {/* Mobile Close */}
+                                <button onClick={onClose} className="md:hidden text-slate-400 p-2">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                                {/* Desktop Collapse */}
+                                <button
+                                    onClick={onToggleCollapse}
+                                    className="hidden md:flex text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                                    title="Collapse sidebar"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">menu_open</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {/* New Chat Button */}
-                        <button className="flex items-center gap-3 w-full px-4 py-3 bg-[#2F3133] hover:bg-[#3C3F41] text-white rounded-full font-medium text-sm mb-6 transition-all duration-200">
-                            <span className="material-symbols-outlined text-[20px]">add</span>
-                            New chat
-                        </button>
-
-                        {/* My Stuff Section */}
-                        <div className="mb-4">
-                            <button className="flex items-center justify-between w-full px-3 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-sm font-medium">My stuff</span>
-                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                        {/* Navigation Items */}
+                        <nav className="space-y-1 mb-4">
+                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+                                <span className="text-sm">New Chat</span>
                             </button>
-                        </div>
-
-                        {/* Gems Section */}
-                        <div className="mb-4">
-                            <button className="flex items-center justify-between w-full px-3 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-sm font-medium">Gems</span>
-                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">smart_toy</span>
+                                <span className="text-sm">Agents</span>
                             </button>
-                        </div>
+                            <button className="flex items-center justify-between w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                                    <span className="text-sm">Intelligence</span>
+                                </div>
+                                <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-medium">Beta</span>
+                            </button>
+                        </nav>
+
+                        <div className="h-px bg-border-dark my-2"></div>
+
+                        {/* Projects Section */}
+                        <nav className="space-y-1 mb-4">
+                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">folder_open</span>
+                                <span className="text-sm">New Project</span>
+                            </button>
+                        </nav>
 
                         {/* Chats Section */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            <p className="px-3 mb-2 text-sm font-medium text-slate-400">Chats</p>
+                            <p className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Chats</p>
                             <div className="space-y-0.5">
                                 {[
                                     { text: 'HDFC Bank Q3 Analysis', active: true },
@@ -82,18 +101,38 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                     { text: 'Tata Motors Trends' },
                                     { text: 'EV Sector Benchmark' }
                                 ].map((item, idx) => (
-                                    <div key={idx} className={`flex items-center px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${item.active ? 'bg-primary/30 text-white border border-primary/50' : 'hover:bg-white/5 text-slate-400'}`}>
+                                    <div
+                                        key={idx}
+                                        className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${item.active
+                                            ? 'bg-white/5 text-white border-l-2 border-primary'
+                                            : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'
+                                            }`}
+                                    >
                                         <p className="text-sm truncate">{item.text}</p>
+                                        <button className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all">
+                                            <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                                        </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Footer - Settings & Help */}
-                        <div className="pt-4 mt-auto border-t border-white/5">
-                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer transition-colors">
-                                <span className="material-symbols-outlined text-[20px]">settings</span>
-                                <span className="text-sm">Settings and help</span>
+                        {/* Footer - User Profile */}
+                        <div className="pt-3 mt-auto border-t border-border-dark">
+                            {/* User Profile */}
+                            <button className="flex items-center justify-between w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-8 rounded bg-slate-600 flex items-center justify-center text-xs font-medium text-white uppercase">
+                                        {isAuthenticated && user?.name ? user.name.charAt(0) : 'G'}
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-sm font-medium text-white">
+                                            {isAuthenticated && user?.name ? user.name : 'Guest'}
+                                        </p>
+                                        <p className="text-xs text-slate-500">Free Plan</p>
+                                    </div>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-500 text-[18px]">unfold_more</span>
                             </button>
                         </div>
                     </>
