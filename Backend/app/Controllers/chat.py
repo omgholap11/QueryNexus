@@ -1,16 +1,75 @@
 from app.AI_Engine.response_pipeline import generate_llm_response
+from app.AI_Engine.chat_title_pipeline import get_chat_title
 from app.Utils.session_utils import generate_session_id
 from fastapi import HTTPException 
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from datetime import datetime
+from app.Models.chat import ChatSession
+from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
 
-def get_response_from_model(payload , current_user , db):
+def update_chat_title_task(session_id : str , user_query : str):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
+    print("Background Task in Progress to update the chat title.")     ## so create the another local session 
+
+    db = session()
+    try:
+        chat_title = get_chat_title(user_query)
+        
+        print("Chat Title: ",chat_title)
+        if chat_title:
+            session_to_update = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+            if session_to_update:
+                session_to_update.title = chat_title
+                db.commit()
+                print("Chat title updated!!")
+
+    except Exception as e:
+        print(f"Background Tasks(chat title updation) failed {e}")
+    finally:
+        db.close()
+        print("Local db session closed!")
+
+
+
+
+def get_response_from_model(payload , current_user , db , background_tasks):
     session_id = ""
     # print(f"Welcome User {current_user['id']}")
 
-    if not payload.session_id or payload.session_id == "null":
+    if not payload.session_id or payload.session_id == "null":   ## new user so to create the sessionid and the session entry too here 
         print("New user")
-        session_id = generate_session_id()
+        if current_user and current_user['id']:  ## now to create the session right 
+            user_id = current_user['id']
+            session_data = {
+               "user_id" : user_id,
+               "title" : "New Chat",
+               "created_at" : datetime.utcnow(),
+            }
+
+            chat_session_model = ChatSession(**session_data)
+            if chat_session_model:
+                try:
+                    db.add(chat_session_model)
+                    db.commit()
+                    db.refresh(chat_session_model)
+               
+                    session_id = chat_session_model.session_id
+                    print(f"{session_data}  inserted in the database with session id {session_id}")
+
+                    background_tasks.add_task(   ## this will be executed at the background after response is send to frontend then 
+                        update_chat_title_task , 
+                        session_id,
+                        payload.question,
+                    )
+
+                except Exception as e:
+                   print(f"Error occured while inserting the session data in db -- {e}")
+                
+
+
+            else :
+                session_id = generate_session_id()
+
     else:
         print("Existing User")
         session_id = payload.session_id

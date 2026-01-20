@@ -1,8 +1,9 @@
 from sqlalchemy import  Column , String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID  
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship  
 import uuid   
-Base = declarative_base()
+from app.Config.Database.database import Base
 
 class UserModel(Base):
     __tablename__ = "users"
@@ -10,3 +11,5 @@ class UserModel(Base):
     name = Column(String , nullable=False)
     email = Column(String , unique=True , nullable=False)
     password = Column(String , nullable=False)
+
+    sessions = relationship('ChatSession' , back_populates="user" , cascade="all, delete")  

@@ -20,3 +20,7 @@ class SearchQuery(BaseModel):
     is_date_specific: bool = Field(..., description="True if user mentioned a specific time")
     start_date: Optional[str] = Field(None, description="ISO format (YYYY-MM-DD)")
     end_date: Optional[str] = Field(None, description="ISO format (YYYY-MM-DD)")
+
+
+class ChatTitleResponse(BaseModel):
+    title : Annotated[str , Field(title="Title of the user query.")]

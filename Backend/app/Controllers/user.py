@@ -31,7 +31,7 @@ def handle_user_signup(payload , res , db):
         raise HTTPException(status_code=400 , detail = "Invalid Data Provided")
     try:
         db.add(user_model)
-        db.commit()
+        db.commit()     
         db.refresh(user_model)
         print(f"Data saved to the database: {user_data}")
 
