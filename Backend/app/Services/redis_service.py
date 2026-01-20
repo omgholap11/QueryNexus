@@ -63,6 +63,10 @@ def save_message_to_redis(session_id: str, role: str, content: str):
           
 
 def retrive_chat_history_from_redis(session_id : str):
+    if not session_id:
+        print("Null ession id recieved!!")
+        return []
+    
     chat_history = []
     key = f"chat: {session_id}"
     try:
@@ -81,3 +85,13 @@ def retrive_chat_history_from_redis(session_id : str):
     except Exception as e:
         print(f"Error occured while saving the message in chat: {e}")
         return []
+    
+
+# def save_database_messages_to_redis(message_data):
+#     if not message_data:
+#         print("Message data not recieved to the redis!!")
+    
+#     try:
+#         redis_client = get_redis_client()
+
+

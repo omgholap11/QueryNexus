@@ -4,8 +4,9 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-def get_response_from_model(payload , db):
+def get_response_from_model(payload , current_user , db):
     session_id = ""
+    # print(f"Welcome User {current_user['id']}")
 
     if not payload.session_id or payload.session_id == "null":
         print("New user")
@@ -19,10 +20,11 @@ def get_response_from_model(payload , db):
     print(f"Question {user_question} recieved from sessionid {session_id}")
     
     try:        
-        llm_result = generate_llm_response(user_question , session_id)
-        print("Response from model: " , llm_result)
+        # llm_result = generate_llm_response(user_question , session_id)
+        # print("Response from model: " , llm_result)
 
-        llm_response = llm_result.dict()
+        # llm_response = llm_result.dict()
+        llm_response = {"answer" : "BSDK kyu limit hit kar raha hai!!" , "source" : []}
         llm_response['session_id'] = session_id
 
         return JSONResponse(

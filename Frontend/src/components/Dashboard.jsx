@@ -104,7 +104,12 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 }
             };
 
-            const response = await axios.post('http://localhost:8000/api/chat/getresponse', payload);
+            const response = await axios.post('http://localhost:8000/api/chat/getresponse',
+                payload , 
+                {
+                    withCredentials : true
+                }
+            );
 
             const { answer, source, session_id } = response.data;
 
