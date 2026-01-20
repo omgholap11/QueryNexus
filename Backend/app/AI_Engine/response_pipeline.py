@@ -45,46 +45,20 @@ import logging
 logger = logging.getLogger(__name__)      ## for keeping the logs logs are pessited even if the terminal clear or was off 
 
 def generate_llm_response(user_question: str, session_id: str):
-    detailed_question = {
-        "standalone_question": user_question, 
-        "is_date_specific": False,
-        "start_date": None,
-        "end_date": None
-        }
+    standalone_question = user_question
     try:
-        rewriter_output = get_detailed_question(user_question, session_id)
-        if rewriter_output:
-            detailed_question = rewriter_output
-        print(f"Detailed Question: {detailed_question}")
+        standalone_question = get_detailed_question(user_question, session_id)
+        print(f"Detailed Question: {standalone_question}")
+
+        if not standalone_question:
+            standalone_question = user_question
 
     except Exception as e:
         logger.error(f"Rewriter Failed: {e}")
         print("Fallback: Using original question.")
 
     try:
-        context_docs = []
-        standalone_question = detailed_question['standalone_question']
-        if detailed_question['is_date_specific'] and detailed_question['start_date']:
-            start_date = detailed_question['start_date']
-            end_date = detailed_question['end_date']
-
-            end_date_obj = datetime.strptime(end_date , "%Y-%m-%d")
-            updated_end_date = (end_date_obj + timedelta(days=1)).strftime("%Y-%m-%d")       ## added one day in the end date to encounter the delay by the news apis as the free tier news api often become late for giving the informations 
-            filters = {
-                "date" : {
-                    "$gte" : start_date , 
-                    "$lte" : updated_end_date
-                }
-            }
-
-            context_docs = vector_store.similarity_search(
-                query=standalone_question,
-                filter = filters,
-                k = 5
-            )
-        
-        else:
-            context_docs = retriver.invoke(detailed_question['standalone_question'])
+        context_docs = retriver.invoke(standalone_question)
 
 
         print(f"Contextual Docs Found: {len(context_docs)}")
@@ -123,5 +97,5 @@ def generate_llm_response(user_question: str, session_id: str):
 # print(generate_llm_response("The much-awaited Union Budget for the financial year 2026-27 will be presented by" , "vms-user-chat-123"))
 # print(generate_llm_response("latest news related to the monday holiday is ?" , "12356"))
 # print(get_response("Who will win today maxverstappen or lando norris?"))
-# print(get_response("what is the latest news related to the tariffs?"))
+# print(generate_llm_response("what is the latest news related to the tariffs?" , "user_xx1234"))
 # print(get_response("What happened about the netflix and warner bros deal?"))

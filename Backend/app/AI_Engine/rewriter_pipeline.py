@@ -1,6 +1,6 @@
 from langchain_core.prompts import PromptTemplate
 from app.AI_Engine.llm_models import get_gemini_25_flash_lite
-from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from app.Services.redis_service import retrive_chat_history_from_redis
 from app.Schema.response import SearchQuery
 from datetime import datetime
@@ -13,7 +13,6 @@ RULES:
 1. Rewrite the "Follow-up Question" into a concise, standalone search query. Replace pronouns (it, he, that) with specific entities from the Chat History.
 2. Keep the query concise and focused on the user's intent.
 3. Output ONLY the rewritten question text. No preamble.
-4. If the user mentions relative time (e.g., "yesterday", "last week" or "date"), use the Current Date to resolve the specific date range.
 
 --- CHAT HISTORY START ---
 {chat_history}
@@ -29,11 +28,9 @@ rewriter_prompt = PromptTemplate(
 
 llm = get_gemini_25_flash_lite()
 
-parser = PydanticOutputParser(pydantic_object=SearchQuery)
+parser = StrOutputParser()
 
-llm_wso = llm.with_structured_output(parser)
-
-rewriter_chain = rewriter_prompt | llm_wso
+rewriter_chain = rewriter_prompt | llm | parser
 
 def get_detailed_question(question: str, session_id: str):
 
@@ -54,10 +51,9 @@ def get_detailed_question(question: str, session_id: str):
             'question': question
         })
         
-        result_dict = response.model_dump()
-        print("Response from Rewriter Pipeline: " , result_dict)
+        print("Response from Rewriter Pipeline: " , response)
 
-        return result_dict
+        return response
         
     except Exception as e:
         print(f"Error while generating standalone question: {e}")
