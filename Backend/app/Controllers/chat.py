@@ -8,13 +8,13 @@ from datetime import datetime
 from app.Models.chat import ChatSession
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
 
-def update_chat_title_task(session_id : str , user_query : str):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
+def update_chat_title_task(session_id : str , user_query : str ):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
     print("Background Task in Progress to update the chat title.")     ## so create the another local session 
 
     db = session()
     try:
         chat_title = get_chat_title(user_query)
-        
+
         print("Chat Title: ",chat_title)
         if chat_title:
             session_to_update = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
@@ -30,10 +30,8 @@ def update_chat_title_task(session_id : str , user_query : str):   ## this backg
         print("Local db session closed!")
 
 
-
-
 def get_response_from_model(payload , current_user , db , background_tasks):
-    session_id = ""
+    session_id = None
     # print(f"Welcome User {current_user['id']}")
 
     if not payload.session_id or payload.session_id == "null":   ## new user so to create the sessionid and the session entry too here 
@@ -98,3 +96,25 @@ def get_response_from_model(payload , current_user , db , background_tasks):
         print(f"Error while getting response from model!! {e}")
         raise HTTPException(status_code=500 , detail="Internal AI Engine Processing Failed!!")
     
+
+def handle_get_all_sessions(current_user , db):
+    #first check whether the user is being authenticated right 
+    if not current_user or not current_user['id']:
+        print("User Was Unauthorized!!")
+        HTTPException(status_code=401 , detail="Unauthorized User!!")
+
+    try:
+        user_id = current_user['id']
+        all_sessions = db.query(ChatSession).filter(ChatSession.user_id == user_id).all()
+    
+        # print(f"Fetched all sessions with length {len(all_sessions)}")
+        print(all_sessions)   
+
+        return all_sessions   ## fast api converts these into the json using pydantic validations at the responsre_model
+    
+    except Exception as e:
+        print(f"Error while retriving the sessions from the DB ->  {e}")
+        HTTPException(
+            status_code=500,
+            detail="Error while fetching all sessions!"
+        )

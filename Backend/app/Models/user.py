@@ -13,3 +13,5 @@ class UserModel(Base):
     password = Column(String , nullable=False)
 
     sessions = relationship('ChatSession' , back_populates="user" , cascade="all, delete")  
+
+    

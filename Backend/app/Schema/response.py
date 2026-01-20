@@ -1,5 +1,7 @@
 from pydantic import BaseModel , Field
 from typing import Annotated , List , Optional
+from uuid import UUID
+from datetime import datetime
 
 class LLM_Response_Format(BaseModel):
     answer : Annotated[str , Field(title="The direct answer to the user's question. Use Markdown bolding for prices/metrics. Do NOT include a 'Sources' section here.")]
@@ -24,3 +26,13 @@ class SearchQuery(BaseModel):
 
 class ChatTitleResponse(BaseModel):
     title : Annotated[str , Field(title="Title of the user query.")]
+
+
+class ChatSessionsSchema(BaseModel):
+    session_id : Annotated[UUID , Field(title="Session_id of the session or chat..")]
+    title : Annotated[str , Field(title="Title of the chat..")]
+    created_at : Annotated[datetime , Field(title="Chat created or started at...")]
+
+    class Config:
+        from_attributes : True   ## pydantic can read the sqlalchemy object using this 
+        populate_by_name : True

@@ -1,9 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
     const user = useSelector((state) => state.auth.user);
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const [sessions, setSessions] = useState([]);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+
+    useEffect(() => {
+        const fetchSessions = async () => {
+            if (!isAuthenticated) return;
+
+            setIsLoadingSessions(true);
+            try {
+                const response = await axios.get("/api/chat/getallsessions", {
+                    withCredentials: true
+                });
+
+                if (response.status === 200) {
+                    setSessions(response.data);
+                    console.log("Sessions fetched:", response.data);
+                }
+            } catch (error) {
+                console.log("Error fetching sessions:", error);
+            } finally {
+                setIsLoadingSessions(false);
+            }
+        };
+
+        fetchSessions();
+    }, [isAuthenticated]);
 
     return (
         <aside className={`
@@ -95,25 +122,25 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                             <p className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Chats</p>
                             <div className="space-y-0.5">
-                                {[
-                                    { text: 'HDFC Bank Q3 Analysis', active: true },
-                                    { text: 'Crude Oil Forecast' },
-                                    { text: 'Tata Motors Trends' },
-                                    { text: 'EV Sector Benchmark' }
-                                ].map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${item.active
-                                            ? 'bg-white/5 text-white border-l-2 border-primary'
-                                            : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'
-                                            }`}
-                                    >
-                                        <p className="text-sm truncate">{item.text}</p>
-                                        <button className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all">
-                                            <span className="material-symbols-outlined text-[16px]">more_vert</span>
-                                        </button>
+                                {isLoadingSessions ? (
+                                    <div className="px-3 py-4 text-center">
+                                        <span className="material-symbols-outlined text-slate-500 animate-spin">sync</span>
                                     </div>
-                                ))}
+                                ) : sessions.length === 0 ? (
+                                    <p className="px-3 py-4 text-sm text-slate-500 text-center">No chats yet</p>
+                                ) : (
+                                    sessions.map((session, idx) => (
+                                        <div
+                                            key={session.session_id || idx}
+                                            className="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400"
+                                        >
+                                            <p className="text-sm truncate">{session.title}</p>
+                                            <button className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all">
+                                                <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
