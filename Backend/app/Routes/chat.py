@@ -1,6 +1,6 @@
-from fastapi import APIRouter  , Depends ,BackgroundTasks
-from app.Schema.response import User_Chat_Payload , ChatSessionsSchema
-from app.Controllers.chat import get_response_from_model , handle_get_all_sessions
+from fastapi import APIRouter  , Depends ,BackgroundTasks , Path
+from app.Schema.response import User_Chat_Payload , ChatSessionsSchemaForClient , ChatMessagesSchemaForClient
+from app.Controllers.chat import get_response_from_model , handle_get_all_sessions , handle_get_sessions_messages
 from sqlalchemy.orm import Session
 from app.Config.Database.database import get_db
 from typing import Optional , List
@@ -9,7 +9,7 @@ from app.Dependencies.authentication import get_optimal_user_from_cookie
 chat_router = APIRouter()
 
 
-@chat_router.post("/getresponse")
+@chat_router.post("/get-response")
 def get_response(
     request : User_Chat_Payload,
     background_tasks : BackgroundTasks,
@@ -23,11 +23,19 @@ def get_response(
     "source" : ['https://www.cnbc.com/2026/01/17/week-in-review-stocks-battled-a-flood-of-news-and-we-booked-some-profits.html', 'https://www.livemint.com/market/stock-market-news/q3-results-gold-silver-rates-to-india-us-trade-deal-top-five-triggers-that-may-dictate-indian-stock-market-this-week-11768641823168.html']}
 
 
-@chat_router.get("/getallsessions" , response_model = List[ChatSessionsSchema])
+@chat_router.get("/get-all-sessions" , response_model = List[ChatSessionsSchemaForClient])
 def get_all_sessions(
     db : Session = Depends(get_db),
-    current_user : Optional[dict] = Depends(get_optimal_user_from_cookie),
+    current_user : dict = Depends(get_optimal_user_from_cookie),
 ):
     return handle_get_all_sessions(current_user , db)
 
 
+@chat_router.get("/get-session-messages/{session_id}" , response_model= List[ChatMessagesSchemaForClient])
+def get_messages(
+    session_id : str = Path(...,description="Session Id of the chat to retrive the messages.."), 
+    current_user: dict = Depends(get_optimal_user_from_cookie),
+    db : Session = Depends(get_db),
+
+):
+    return handle_get_sessions_messages(session_id , current_user, db)

@@ -5,13 +5,13 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from app.Models.chat import ChatSession
+from app.Models.chat import ChatSession , ChatMessage
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
 from app.Redis.redis_service import save_chat_message_to_redis_queue
 import json
 
 
-
+##  Background Tasks
 def update_chat_title_task(session_id : str , user_query : str ):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
     print("Background Task in Progress to update the chat title.")     ## so create the another local session 
 
@@ -141,11 +141,33 @@ def handle_get_all_sessions(current_user , db):
         # print(f"Fetched all sessions with length {len(all_sessions)}")
         print(all_sessions)   
 
-        return all_sessions   ## fast api converts these into the json using pydantic validations at the responsre_model
+        return all_sessions   ## fast api converts these into the json using pydantic validations because of the responsre_model
     
     except Exception as e:
         print(f"Error while retriving the sessions from the DB ->  {e}")
         HTTPException(
             status_code=500,
             detail="Error while fetching all sessions!"
+        )
+
+
+def handle_get_sessions_messages(session_id ,current_user , db):
+    print("Fetching the session messages.....")
+    if not session_id:
+        raise HTTPException(status_code=400 , detail="Session id is missing!!")
+    
+    if not current_user or not current_user['id']:
+        raise HTTPException(status_code=401 , detail="User is not Authenticated!!")
+    
+    try:
+        user_id = current_user['id']
+
+        raw_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id and ChatMessage.user_id == user_id).order_by(ChatMessage.created_at).all()   ## for desc  >>  desc(Chatmessage.createdat)
+
+        return raw_messages    ## response model automatically converts the model into the pydantic object and then json type using the response model
+    except Exception as e:
+        print(f"Error while fetching session Messages. {e}")
+        raise HTTPException(
+            status_code=500 , 
+            detail="Server side error while fetching the session messages."
         )

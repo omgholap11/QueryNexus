@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Header from './Header';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
@@ -50,6 +51,12 @@ const TypewriterText = ({ text, onComplete, scrollRef }) => {
 };
 
 export default function Dashboard({ isSidebarCollapsed = false }) {
+    const dispatch = useDispatch();
+    const reduxMessages = useSelector((state) => state.chat.messages);
+    const activeSessionId = useSelector((state) => state.chat.activeSessionId);
+    const activeSessionTitle = useSelector((state) => state.chat.activeSessionTitle);
+    const isLoadingMessages = useSelector((state) => state.chat.isLoadingMessages);
+
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -64,9 +71,23 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const textareaRef = useRef(null);
     const messagesEndRef = useRef(null);
 
-    const chatTitle = messages.length > 0 && messages[1]?.type === 'ai'
+    // Sync Redux messages to local state when session changes
+    useEffect(() => {
+        if (activeSessionId && reduxMessages.length > 0) {
+            setMessages(reduxMessages);
+            setSessionId(activeSessionId);
+            // Reset interaction states for new session
+            setLikedMessages({});
+            setDislikedMessages({});
+            setCopiedId(null);
+            setEditingIndex(null);
+            setEditText("");
+        }
+    }, [activeSessionId, reduxMessages]);
+
+    const chatTitle = activeSessionTitle || (messages.length > 0 && messages[1]?.type === 'ai'
         ? messages[0]?.content
-        : null;
+        : null);
 
     const adjustTextareaHeight = () => {
         const textarea = textareaRef.current;
@@ -104,10 +125,10 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 }
             };
 
-            const response = await axios.post('http://localhost:8000/api/chat/getresponse',
-                payload , 
+            const response = await axios.post('http://localhost:8000/api/chat/get-response',
+                payload,
                 {
-                    withCredentials : true
+                    withCredentials: true
                 }
             );
 

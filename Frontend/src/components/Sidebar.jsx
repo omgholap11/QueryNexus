@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
+import { setActiveSession, setMessages, setIsLoadingMessages } from '../Fetatures/chatSlice';
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
+    const dispatch = useDispatch();
     const user = useSelector((state) => state.auth.user);
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const activeSessionId = useSelector((state) => state.chat.activeSessionId);
     const [sessions, setSessions] = useState([]);
     const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
@@ -14,7 +17,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
             setIsLoadingSessions(true);
             try {
-                const response = await axios.get("/api/chat/getallsessions", {
+                const response = await axios.get("/api/chat/get-all-sessions", {
                     withCredentials: true
                 });
 
@@ -31,6 +34,30 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
         fetchSessions();
     }, [isAuthenticated]);
+
+    const handleChatClick = async (sessionId, title) => {
+        console.log("Fetching session messages for:", sessionId);
+
+        // Set active session immediately
+        dispatch(setActiveSession({ sessionId, title }));
+        dispatch(setIsLoadingMessages(true));
+
+        try {
+            const response = await axios.get(`/api/chat/get-session-messages/${sessionId}`, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                const data = response.data;
+                console.log("Chat session messages:", data);
+                dispatch(setMessages(data));
+            }
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        } finally {
+            dispatch(setIsLoadingMessages(false));
+        }
+    };
 
     return (
         <aside className={`
@@ -132,10 +159,17 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                     sessions.map((session, idx) => (
                                         <div
                                             key={session.session_id || idx}
-                                            className="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400"
+                                            onClick={() => handleChatClick(session.session_id, session.title)}
+                                            className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
+                                                    ? 'bg-white/5 text-white border-l-2 border-primary'
+                                                    : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'
+                                                }`}
                                         >
                                             <p className="text-sm truncate">{session.title}</p>
-                                            <button className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all">
+                                            <button
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all"
+                                            >
                                                 <span className="material-symbols-outlined text-[16px]">more_vert</span>
                                             </button>
                                         </div>

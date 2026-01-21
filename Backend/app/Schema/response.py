@@ -28,7 +28,7 @@ class ChatTitleResponse(BaseModel):
     title : Annotated[str , Field(title="Title of the user query.")]
 
 
-class ChatSessionsSchema(BaseModel):
+class ChatSessionsSchemaForClient(BaseModel):
     session_id : Annotated[UUID , Field(title="Session_id of the session or chat..")]
     title : Annotated[str , Field(title="Title of the chat..")]
     created_at : Annotated[datetime , Field(title="Chat created or started at...")]
@@ -36,3 +36,14 @@ class ChatSessionsSchema(BaseModel):
     class Config:
         from_attributes : True   ## pydantic can read the sqlalchemy object using this 
         populate_by_name : True
+
+
+class ChatMessagesSchemaForClient(BaseModel):
+    role : Annotated[str , Field(title="Message created by (AI OR USER).")]
+    content : Annotated[str , Field(title="Content od the message.")]
+    created_at : Annotated[datetime , Field(title="Timestamp when the message was created.")]
+
+    class Config:
+        from_attribute : True
+        populate_by_name : True
+        
