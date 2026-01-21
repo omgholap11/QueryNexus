@@ -71,6 +71,9 @@ def retrive_chat_history_from_redis(session_id : str):
     key = f"chat: {session_id}"
     try:
         redis_client = get_redis_client()
+        if redis_client is None:
+            print(f"Failed to retrive chat history: Redis Not Initiated!!")
+            return 
         raw_history = redis_client.lrange(key , 0,-1);
         for chat in raw_history:
             data = json.loads(chat)
@@ -87,11 +90,56 @@ def retrive_chat_history_from_redis(session_id : str):
         return []
     
 
-# def save_database_messages_to_redis(message_data):
-#     if not message_data:
-#         print("Message data not recieved to the redis!!")
+def save_chat_message_to_redis_queue(message_data):
+    if not message_data:
+        print("Empty data recieved to push into the redis! skipp...")
+        return 
     
-#     try:
-#         redis_client = get_redis_client()
+    print(f"Inserting the data - {message_data} into the redis!!")
+    try:
+        redis_client = get_redis_client()
+        if redis_client is None:
+            print(f"Failed save chat message to redis: Redis Not Initiated!!")
+            return 
+        
+        redis_client.rpush("chat_message_queue" , message_data)
+
+        print("Chat Message saved to the redis queue!!")
+        return 
+    
+    except Exception as e:
+        print(f"Error while saving the chat message to redis!  {e}")
+        return 
 
 
+
+def retrive_chat_message_from_redis_queue():
+    try:
+        redis_client = get_redis_client()
+        if redis_client is None:
+            print(f"Failed to retrive chat message from redis: Redis Not Initiated!!")
+            return None
+        
+        queue_length = redis_client.llen("chat_message_queue")
+        print("Queue Length! ", queue_length)
+        if queue_length < 0:
+            print("Redis Queue is empty right now!!")
+            return None
+        
+        message_data = redis_client.lpop("chat_message_queue")
+        ##currently we are using the lpop command and it is ok although lpop >>   retrives the leftmost data from the list and deletes that data is single atomic step right 
+        ## For the future scope >>>>    we can use the 'lrange'   this doenst removes the data from the queue just retrives 
+        ##                              we can use this too 'brpoplpush'  this pushes  the data from the list to the processsing list so we can retrive it anytime from any moment
+        print(f"Retrive the message data from the redis queue! {message_data}")
+        print(type(message_data))
+
+        return message_data
+
+    except Exception as e:
+        print("Error while retriving message from the redis chat message queue!")
+        return None
+
+# message_data = retrive_chat_message_from_redis_queue()
+# message_data_dict =  json.loads(message_data)
+# type(message_data_dict)
+# print("Session id: " , message_data_dict['session_id'])

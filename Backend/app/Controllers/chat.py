@@ -7,6 +7,10 @@ from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from app.Models.chat import ChatSession
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
+from app.Services.redis_service import save_chat_message_to_redis_queue
+import json
+
+
 
 def update_chat_title_task(session_id : str , user_query : str ):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
     print("Background Task in Progress to update the chat title.")     ## so create the another local session 
@@ -83,6 +87,33 @@ def get_response_from_model(payload , current_user , db , background_tasks):
         # llm_response = llm_result.dict()
         llm_response = {"answer" : "BSDK kyu limit hit kar raha hai!!" , "source" : []}
         llm_response['session_id'] = session_id
+
+       
+        if current_user and current_user['id']:  ## User is authenticated here so save his complete chats right in the redis 
+            user_message_data= {
+            "session_id" : str(session_id),
+            "role" : "User",
+            "content" : user_question,
+            "created_at" : datetime.utcnow().isoformat()            
+            }
+
+            ai_message_data = {
+            "session_id" : str(session_id),
+            "role" : "VMS-AI",
+            "content" : llm_response['answer'],
+            "created_at": datetime.utcnow().isoformat()
+            }
+
+            user_message_data_json = json.dumps(user_message_data)
+            ai_message_data_json = json.dumps(ai_message_data)
+
+            try:
+                print("Pusing the messages to the redis queue!!")
+                save_chat_message_to_redis_queue(user_message_data_json)
+                save_chat_message_to_redis_queue(ai_message_data_json)
+
+            except Exception as e:
+                print("Error while storing message to the redis queue!")
 
         return JSONResponse(
             status_code=200,
