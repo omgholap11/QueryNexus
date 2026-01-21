@@ -1,5 +1,5 @@
 import hashlib
-from app.Services.redis_client import get_redis_client
+from app.Redis.redis_client import get_redis_client
 import json
 from redis import RedisError
 from langchain_core.messages import HumanMessage , AIMessage
@@ -30,9 +30,6 @@ def check_and_cache_to_redis(url):
     except Exception as e:
         print(f"Error occured duing Redis caching as {e}")
         return True
-
-# cache_to_redis("www.google.com/omgholap11/@45")
-
 
 
 def save_message_to_redis(session_id: str, role: str, content: str):
@@ -112,7 +109,6 @@ def save_chat_message_to_redis_queue(message_data):
         return 
 
 
-
 def retrive_chat_message_from_redis_queue():
     try:
         redis_client = get_redis_client()
@@ -122,24 +118,40 @@ def retrive_chat_message_from_redis_queue():
         
         queue_length = redis_client.llen("chat_message_queue")
         print("Queue Length! ", queue_length)
-        if queue_length < 0:
-            print("Redis Queue is empty right now!!")
-            return None
         
-        message_data = redis_client.lpop("chat_message_queue")
+        # timeout=0 means "wait forever".
+        # It returns a tuple: ('queue_name', 'data')
+        queue_name , raw_message_data = redis_client.blpop("chat_message_queue" , timeout=0)
+
         ##currently we are using the lpop command and it is ok although lpop >>   retrives the leftmost data from the list and deletes that data is single atomic step right 
         ## For the future scope >>>>    we can use the 'lrange'   this doenst removes the data from the queue just retrives 
         ##                              we can use this too 'brpoplpush'  this pushes  the data from the list to the processsing list so we can retrive it anytime from any moment
-        print(f"Retrive the message data from the redis queue! {message_data}")
-        print(type(message_data))
-
-        return message_data
+        print(f"Retrive the message data from the redis queue! {raw_message_data}")
+        # print(type(raw_message_data))
+        return raw_message_data
 
     except Exception as e:
-        print("Error while retriving message from the redis chat message queue!")
+        print(f"Error while retriving message from the redis chat message queue! {e}")
         return None
 
 # message_data = retrive_chat_message_from_redis_queue()
 # message_data_dict =  json.loads(message_data)
 # type(message_data_dict)
 # print("Session id: " , message_data_dict['session_id'])
+
+
+## lpop here this actually wastes the cpu 
+## we will not going to use the simple lpop here as it can waste the cpu 
+## lpop is non blocking so whenever the queue is empty still it immediately fetches from the queue nil from the queue and returns some response
+## but think of the scenario od th worker he will be in the infinite time loop if we are going to use the lpop
+
+## hence we will use the blpop   >>>   blocking one 
+## it basically blocks the request until atleast one message gets available in the queue 
+## as not to keep this block very infinite there is the certain time stamp so it waits untill the x time amount riht 
+## this ill definitely avoids the infinite calling to the redis queue adn will not cause the overhead to the cpu or the server
+## here we have to specify some timeout that is the ax time until which the request keeps waiting and as soon as the timeout hits it returns the resonse although the queue is being empty
+## we will set the timeout as 0 as we are comppletely waiting untill the queue is being empty
+
+# In the world of Redis BLPOP:
+# timeout = 5: Means "Wait for 5 seconds. If nothing comes, stop waiting and return None."
+# timeout = 0: Means "Wait FOREVER." (Infinite Wait).

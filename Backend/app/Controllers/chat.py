@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from app.Models.chat import ChatSession
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
-from app.Services.redis_service import save_chat_message_to_redis_queue
+from app.Redis.redis_service import save_chat_message_to_redis_queue
 import json
 
 
@@ -81,11 +81,11 @@ def get_response_from_model(payload , current_user , db , background_tasks):
     print(f"Question {user_question} recieved from sessionid {session_id}")
     
     try:        
-        # llm_result = generate_llm_response(user_question , session_id)
-        # print("Response from model: " , llm_result)
+        llm_result = generate_llm_response(user_question , session_id)
+        print("Response from model: " , llm_result)
 
-        # llm_response = llm_result.dict()
-        llm_response = {"answer" : "BSDK kyu limit hit kar raha hai!!" , "source" : []}
+        llm_response = llm_result.dict()
+        # llm_response = {"answer" : "BSDK kyu limit hit kar raha hai!!" , "source" : []}
         llm_response['session_id'] = session_id
 
        

@@ -6,7 +6,7 @@ from app.Schema.response import LLM_Response_Format
 from app.AI_Engine.prompt_with_str_output import get_prompt_with_str_output 
 from app.AI_Engine.prompt_with_output_parser import get_prompt_with_output_parsers
 from app.AI_Engine.rewriter_pipeline import get_detailed_question
-from app.Services.redis_service import save_message_to_redis
+from app.Redis.redis_service import save_message_to_redis
 
 vector_store = get_vector_store()
 retriver = vector_store.as_retriever(

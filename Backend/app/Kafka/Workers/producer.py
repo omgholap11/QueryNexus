@@ -4,7 +4,7 @@ from kafka import KafkaProducer
 from app.APIs.NewsApis.Finnhub import get_news_finnhub
 from app.APIs.NewsApis.marketaux import get_marketaux_news
 from app.APIs.NewsApis.moneycontrol import get_livemint_news
-from app.Services.redis_service import check_and_cache_to_redis
+from app.Redis.redis_service import check_and_cache_to_redis
 
 
 import datetime
