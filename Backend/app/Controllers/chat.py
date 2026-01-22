@@ -36,10 +36,11 @@ def update_chat_title_task(session_id : str , user_query : str ):   ## this back
 
 def get_response_from_model(payload , current_user , db , background_tasks):
     session_id = None
+    is_first_message = False
     # print(f"Welcome User {current_user['id']}")
-
     if not payload.session_id or payload.session_id == "null":   ## new user so to create the sessionid and the session entry too here 
         print("New user")
+        is_first_message = True
         if current_user and current_user['id']:  ## now to create the session right 
             user_id = current_user['id']
             session_data = {
@@ -81,7 +82,7 @@ def get_response_from_model(payload , current_user , db , background_tasks):
     print(f"Question {user_question} recieved from sessionid {session_id}")
     
     try:        
-        llm_result = generate_llm_response(user_question , session_id)
+        llm_result = generate_llm_response(user_question , session_id , is_first_message)
         print("Response from model: " , llm_result)
 
         llm_response = llm_result.dict()
@@ -152,6 +153,7 @@ def handle_get_all_sessions(current_user , db):
 
 
 def handle_get_sessions_messages(session_id ,current_user , db):
+
     print("Fetching the session messages.....")
     if not session_id:
         raise HTTPException(status_code=400 , detail="Session id is missing!!")
@@ -171,3 +173,4 @@ def handle_get_sessions_messages(session_id ,current_user , db):
             status_code=500 , 
             detail="Server side error while fetching the session messages."
         )
+    

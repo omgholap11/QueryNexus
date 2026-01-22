@@ -7,7 +7,7 @@ const initialState = {
     isLoadingMessages: false,
 };
 
-export const chatSlice = createSlice({
+export const chatSlice = createSlice({   
     name: 'chat',
     initialState,
     reducers: {

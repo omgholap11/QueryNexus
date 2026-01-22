@@ -32,7 +32,7 @@ def check_and_cache_to_redis(url):
         return True
 
 
-def save_message_to_redis(session_id: str, role: str, content: str):
+def save_chat_history_to_redis(session_id: str, role: str, content: str):
        
     key = f"chat: {session_id}"   
     message_data = {

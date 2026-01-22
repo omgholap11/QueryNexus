@@ -6,7 +6,7 @@ from app.Schema.response import LLM_Response_Format
 from app.AI_Engine.prompt_with_str_output import get_prompt_with_str_output 
 from app.AI_Engine.prompt_with_output_parser import get_prompt_with_output_parsers
 from app.AI_Engine.rewriter_pipeline import get_detailed_question
-from app.Redis.redis_service import save_message_to_redis
+from app.Redis.redis_service import save_chat_history_to_redis
 
 vector_store = get_vector_store()
 retriver = vector_store.as_retriever(
@@ -44,14 +44,16 @@ def format_docs(docs):
 import logging
 logger = logging.getLogger(__name__)      ## for keeping the logs logs are pessited even if the terminal clear or was off 
 
-def generate_llm_response(user_question: str, session_id: str):
+def generate_llm_response(user_question: str, session_id: str , is_first_message : bool):
     standalone_question = user_question
     try:
-        standalone_question = get_detailed_question(user_question, session_id)
-        print(f"Detailed Question: {standalone_question}")
+        if is_first_message is False:
+            standalone_question = get_detailed_question(user_question, session_id)
 
         if not standalone_question:
             standalone_question = user_question
+            
+        print(f"Stabdalone Question: {standalone_question}")
 
     except Exception as e:
         logger.error(f"Rewriter Failed: {e}")
@@ -79,8 +81,8 @@ def generate_llm_response(user_question: str, session_id: str):
         })
 
         if session_id and session_id != "null":
-            save_message_to_redis(session_id, "user", user_question)
-            save_message_to_redis(session_id, "ai", response.answer)
+            save_chat_history_to_redis(session_id, "user", user_question)
+            save_chat_history_to_redis(session_id, "ai", response.answer)
 
         return response
 
