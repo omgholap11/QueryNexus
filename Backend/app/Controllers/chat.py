@@ -9,7 +9,7 @@ from app.Models.chat import ChatSession , ChatMessage
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
 from app.Redis.redis_service import save_chat_message_to_redis_queue
 import json
-
+import time
 
 ##  Background Tasks
 def update_chat_title_task(session_id : str , user_query : str ):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
@@ -129,7 +129,7 @@ def get_response_from_model(payload , current_user , db , background_tasks):
         raise HTTPException(status_code=500 , detail="Internal AI Engine Processing Failed!!")
     
 
-def handle_get_all_sessions(current_user , db):
+def handle_get_all_sessions(current_user , db , offset , limit):
     #first check whether the user is being authenticated right 
     if not current_user or not current_user['id']:
         print("User Was Unauthorized!!")
@@ -137,10 +137,12 @@ def handle_get_all_sessions(current_user , db):
 
     try:
         user_id = current_user['id']
-        all_sessions = db.query(ChatSession).filter(ChatSession.user_id == user_id).all()
+        all_sessions = db.query(ChatSession).filter(ChatSession.user_id == user_id).order_by(ChatSession.created_at.desc()).offset(offset).limit(limit).all()
     
         # print(f"Fetched all sessions with length {len(all_sessions)}")
         print(all_sessions)   
+
+        time.sleep(2)
 
         return all_sessions   ## fast api converts these into the json using pydantic validations because of the responsre_model
     
@@ -152,7 +154,7 @@ def handle_get_all_sessions(current_user , db):
         )
 
 
-def handle_get_sessions_messages(session_id ,current_user , db):
+def handle_get_sessions_messages(session_id ,current_user , db , limit , offset):
 
     print("Fetching the session messages.....")
     if not session_id:
@@ -164,7 +166,9 @@ def handle_get_sessions_messages(session_id ,current_user , db):
     try:
         user_id = current_user['id']
 
-        raw_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id and ChatMessage.user_id == user_id).order_by(ChatMessage.created_at).all()   ## for desc  >>  desc(Chatmessage.createdat)
+        raw_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.desc()).offset(offset).limit(limit).all()   ## for desc  >>  desc(Chatmessage.createdat)
+
+        time.sleep(2)
 
         return raw_messages    ## response model automatically converts the model into the pydantic object and then json type using the response model
     except Exception as e:

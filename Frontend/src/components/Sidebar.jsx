@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { setActiveSession, setMessages, setIsLoadingMessages } from '../Fetatures/chatSlice';
+import { setActiveSession, setMessages, setIsLoadingMessages, MESSAGES_LIMIT_CONST } from '../Fetatures/chatSlice';
+
+const SESSIONS_LIMIT = 8;
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
     const dispatch = useDispatch();
@@ -10,30 +12,82 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     const activeSessionId = useSelector((state) => state.chat.activeSessionId);
     const [sessions, setSessions] = useState([]);
     const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
 
-    useEffect(() => {
-        const fetchSessions = async () => {
-            if (!isAuthenticated) return;
+    // Fetch sessions with pagination
+    const fetchSessions = useCallback(async (currentOffset = 0, append = false) => {
+        if (!isAuthenticated) return;
 
+        if (append) {
+            setIsLoadingMore(true);
+        } else {
             setIsLoadingSessions(true);
-            try {
-                const response = await axios.get("/api/chat/get-all-sessions", {
-                    withCredentials: true
-                });
+        }
 
-                if (response.status === 200) {
-                    setSessions(response.data);
-                    console.log("Sessions fetched:", response.data);
+        try {
+            const response = await axios.get(`/api/chat/get-all-sessions?offset=${currentOffset}&limit=${SESSIONS_LIMIT}`, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                const data = response.data;
+                console.log("Sessions fetched:", data, "offset:", currentOffset);
+
+                if (append) {
+                    // Append new sessions to existing list
+                    setSessions(prev => [...prev, ...data]);
+                } else {
+                    // Replace sessions (initial load)
+                    setSessions(data);
                 }
-            } catch (error) {
-                console.log("Error fetching sessions:", error);
-            } finally {
-                setIsLoadingSessions(false);
-            }
-        };
 
-        fetchSessions();
+                // Check if there are more sessions to load
+                setHasMore(data.length === SESSIONS_LIMIT);
+                setOffset(currentOffset + data.length);
+            }
+        } catch (error) {
+            console.log("Error fetching sessions:", error);
+        } finally {
+            setIsLoadingSessions(false);
+            setIsLoadingMore(false);
+        }
     }, [isAuthenticated]);
+
+    // Initial fetch on authentication change
+    useEffect(() => {
+        if (isAuthenticated) {
+            setOffset(0);
+            setHasMore(true);
+            fetchSessions(0, false);
+        } else {
+            setSessions([]);
+            setOffset(0);
+            setHasMore(true);
+        }
+    }, [isAuthenticated]);
+
+    // Load more sessions handler
+    const handleLoadMore = useCallback(() => {
+        if (!isLoadingMore && hasMore) {
+            fetchSessions(offset, true);
+        }
+    }, [isLoadingMore, hasMore, offset, fetchSessions]);
+
+    // Scroll container ref for infinite scroll
+    const scrollContainerRef = useRef(null);
+
+    // Handle scroll for infinite loading
+    const handleScroll = useCallback((e) => {
+        const container = e.target;
+        const { scrollTop, scrollHeight, clientHeight } = container;
+
+        // Trigger load more when scrolled within 50px of bottom
+        if (scrollHeight - scrollTop - clientHeight < 50) {
+            handleLoadMore();
+        }
+    }, [handleLoadMore]);
 
     const handleChatClick = async (sessionId, title) => {
         console.log("Fetching session messages for:", sessionId);
@@ -43,7 +97,8 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         dispatch(setIsLoadingMessages(true));
 
         try {
-            const response = await axios.get(`/api/chat/get-session-messages/${sessionId}`, {
+            // Fetch first page of messages (most recent)
+            const response = await axios.get(`/api/chat/get-session-messages/${sessionId}?offset=0&limit=${MESSAGES_LIMIT_CONST}`, {
                 withCredentials: true
             });
 
@@ -146,7 +201,11 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                         </nav>
 
                         {/* Chats Section */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div
+                            ref={scrollContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto custom-scrollbar relative"
+                        >
                             <p className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Chats</p>
                             <div className="space-y-0.5">
                                 {isLoadingSessions ? (
@@ -156,24 +215,35 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                 ) : sessions.length === 0 ? (
                                     <p className="px-3 py-4 text-sm text-slate-500 text-center">No chats yet</p>
                                 ) : (
-                                    sessions.map((session, idx) => (
-                                        <div
-                                            key={session.session_id || idx}
-                                            onClick={() => handleChatClick(session.session_id, session.title)}
-                                            className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
+                                    <>
+                                        {sessions.map((session, idx) => (
+                                            <div
+                                                key={session.session_id || idx}
+                                                onClick={() => handleChatClick(session.session_id, session.title)}
+                                                className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
                                                     ? 'bg-white/5 text-white border-l-2 border-primary'
                                                     : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'
-                                                }`}
-                                        >
-                                            <p className="text-sm truncate">{session.title}</p>
-                                            <button
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all"
+                                                    }`}
                                             >
-                                                <span className="material-symbols-outlined text-[16px]">more_vert</span>
-                                            </button>
-                                        </div>
-                                    ))
+                                                <p className="text-sm truncate">{session.title}</p>
+                                                <button
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all"
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                                                </button>
+                                            </div>
+                                        ))}
+
+                                        {/* Orange flowing loading indicator */}
+                                        {isLoadingMore && (
+                                            <div className="py-3 relative overflow-hidden">
+                                                <div className="h-0.5 w-full bg-border-dark rounded-full overflow-hidden">
+                                                    <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-[shimmer_1.5s_infinite]"></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter  , Depends ,BackgroundTasks , Path
+from fastapi import APIRouter  , Depends ,BackgroundTasks , Path , Query
 from app.Schema.response import User_Chat_Payload , ChatSessionsSchemaForClient , ChatMessagesSchemaForClient
 from app.Controllers.chat import get_response_from_model , handle_get_all_sessions , handle_get_sessions_messages
 from sqlalchemy.orm import Session
@@ -23,12 +23,16 @@ def get_response(
     "source" : ['https://www.cnbc.com/2026/01/17/week-in-review-stocks-battled-a-flood-of-news-and-we-booked-some-profits.html', 'https://www.livemint.com/market/stock-market-news/q3-results-gold-silver-rates-to-india-us-trade-deal-top-five-triggers-that-may-dictate-indian-stock-market-this-week-11768641823168.html']}
 
 
+#  Implementing with the paginations 
+# url structure >>  /get-all-sessions?offset=20&limit=20
 @chat_router.get("/get-all-sessions" , response_model = List[ChatSessionsSchemaForClient])
 def get_all_sessions(
     db : Session = Depends(get_db),
     current_user : dict = Depends(get_optimal_user_from_cookie),
+    offset : str = Query(... , description="Offset of the starting session.."),
+    limit : str = Query(description="Maximum number of the chats sessions.. " , default=20)  ## make this field as the optional and make the default value as the 20
 ):
-    return handle_get_all_sessions(current_user , db)
+    return handle_get_all_sessions(current_user=current_user , db=db , offset=offset , limit = limit)
 
 
 @chat_router.get("/get-session-messages/{session_id}" , response_model= List[ChatMessagesSchemaForClient])
@@ -36,6 +40,7 @@ def get_messages(
     session_id : str = Path(...,description="Session Id of the chat to retrive the messages.."), 
     current_user: dict = Depends(get_optimal_user_from_cookie),
     db : Session = Depends(get_db),
-
+    offset : str = Query(... , description="Index of the first starting chat...."),
+    limit : str = Query(description="Maximum number of the chats required.." , default = 20)
 ):
-    return handle_get_sessions_messages(session_id , current_user, db)
+    return handle_get_sessions_messages(session_id=session_id, offset=offset , current_user = current_user, db = db , limit=limit)

@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Header from './Header';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import { prependMessages, setIsLoadingOlderMessages, MESSAGES_LIMIT_CONST } from '../Fetatures/chatSlice';
 
 // Typewriter component for streaming effect
 const TypewriterText = ({ text, onComplete, scrollRef }) => {
@@ -56,6 +57,9 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const activeSessionId = useSelector((state) => state.chat.activeSessionId);
     const activeSessionTitle = useSelector((state) => state.chat.activeSessionTitle);
     const isLoadingMessages = useSelector((state) => state.chat.isLoadingMessages);
+    const isLoadingOlderMessages = useSelector((state) => state.chat.isLoadingOlderMessages);
+    const messagesOffset = useSelector((state) => state.chat.messagesOffset);
+    const hasMoreMessages = useSelector((state) => state.chat.hasMoreMessages);
 
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -70,20 +74,79 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const [researchActive, setResearchActive] = useState(false);
     const textareaRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const previousScrollHeightRef = useRef(0);
+    const previousSessionIdRef = useRef(null);
 
     // Sync Redux messages to local state when session changes
     useEffect(() => {
         if (activeSessionId && reduxMessages.length > 0) {
             setMessages(reduxMessages);
-            setSessionId(activeSessionId);
-            // Reset interaction states for new session
-            setLikedMessages({});
-            setDislikedMessages({});
-            setCopiedId(null);
-            setEditingIndex(null);
-            setEditText("");
+
+            // Only scroll to bottom and reset states when session actually changes
+            if (previousSessionIdRef.current !== activeSessionId) {
+                setSessionId(activeSessionId);
+                // Reset interaction states for new session
+                setLikedMessages({});
+                setDislikedMessages({});
+                setCopiedId(null);
+                setEditingIndex(null);
+                setEditText("");
+                // Scroll to bottom on initial load of a NEW session
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                }, 100);
+                previousSessionIdRef.current = activeSessionId;
+            }
         }
     }, [activeSessionId, reduxMessages]);
+
+    // Load older messages function
+    const loadOlderMessages = useCallback(async () => {
+        if (!activeSessionId || isLoadingOlderMessages || !hasMoreMessages) return;
+
+        dispatch(setIsLoadingOlderMessages(true));
+
+        // Save current scroll height to maintain position after prepending
+        if (messagesContainerRef.current) {
+            previousScrollHeightRef.current = messagesContainerRef.current.scrollHeight;
+        }
+
+        try {
+            const response = await axios.get(
+                `/api/chat/get-session-messages/${activeSessionId}?offset=${messagesOffset}&limit=${MESSAGES_LIMIT_CONST}`,
+                { withCredentials: true }
+            );
+
+            if (response.status === 200) {
+                const data = response.data;
+                console.log("Older messages loaded:", data);
+                dispatch(prependMessages(data));
+
+                // Restore scroll position after prepending
+                setTimeout(() => {
+                    if (messagesContainerRef.current) {
+                        const newScrollHeight = messagesContainerRef.current.scrollHeight;
+                        const scrollDiff = newScrollHeight - previousScrollHeightRef.current;
+                        messagesContainerRef.current.scrollTop = scrollDiff;
+                    }
+                }, 50);
+            }
+        } catch (error) {
+            console.error("Error loading older messages:", error);
+        } finally {
+            dispatch(setIsLoadingOlderMessages(false));
+        }
+    }, [activeSessionId, messagesOffset, hasMoreMessages, isLoadingOlderMessages, dispatch]);
+
+    // Handle scroll for loading older messages (scroll up)
+    const handleMessagesScroll = useCallback((e) => {
+        const container = e.target;
+        // Trigger load more when scrolled within 100px of top
+        if (container.scrollTop < 100 && hasMoreMessages && !isLoadingOlderMessages) {
+            loadOlderMessages();
+        }
+    }, [hasMoreMessages, isLoadingOlderMessages, loadOlderMessages]);
 
     const chatTitle = activeSessionTitle || (messages.length > 0 && messages[1]?.type === 'ai'
         ? messages[0]?.content
@@ -101,11 +164,12 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
         adjustTextareaHeight();
     }, [input]);
 
+    // Only scroll to bottom for new messages, not when loading older ones
     useEffect(() => {
-        if (streamingIndex === null) {
+        if (streamingIndex === null && !isLoadingOlderMessages) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages, isLoading]);
+    }, [isLoading]);
 
     const handleSend = async (customMessage = null) => {
         const messageToSend = customMessage || input;
@@ -266,7 +330,11 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
         <div className="flex flex-col h-full w-full">
             <Header title={chatTitle} />
 
-            <div className={`flex-1 overflow-y-auto custom-scrollbar w-full ${hasMessages ? 'pb-28' : ''}`}>
+            <div
+                ref={messagesContainerRef}
+                onScroll={handleMessagesScroll}
+                className={`flex-1 overflow-y-auto custom-scrollbar w-full ${hasMessages ? 'pb-28' : ''}`}
+            >
                 <div className={`w-full max-w-3xl mx-auto transition-all duration-500 ease-in-out min-h-full flex flex-col px-4 ${hasMessages ? 'justify-start pt-6 md:pt-8' : 'items-center justify-center'}`}>
 
                     {!hasMessages && (
@@ -339,6 +407,15 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
                     {hasMessages && (
                         <div className="w-full space-y-6">
+                            {/* Orange shimmer loader at top when loading older messages */}
+                            {isLoadingOlderMessages && (
+                                <div className="py-3 relative overflow-hidden">
+                                    <div className="h-0.5 w-full bg-border-dark rounded-full overflow-hidden">
+                                        <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-shimmer"></div>
+                                    </div>
+                                </div>
+                            )}
+
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex w-full animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
 
