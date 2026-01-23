@@ -1,4 +1,4 @@
-from fastapi import HTTPException 
+from fastapi import HTTPException ,Response
 from app.Models.user import UserModel
 from sqlalchemy.orm import Session
 from app.Services.authentication import generate_token , verify_token
@@ -124,6 +124,7 @@ def handle_user_sign_in(payload , res , db):
         detail="User sign up failed!!"
     )
 
+
 def handle_get_user_details(req):
     token = req.cookies.get('token') 
     print(f"Getting user Tokens: {token}")   
@@ -153,5 +154,74 @@ def handle_get_user_details(req):
         )
 
 
+def handle_user_logout(res : Response):
+    print("Logging out the user!!")
+    try:
+        res.delete_cookie(
+        key='token',
+        path='/',
+        domain=None,
+        secure=False,
+        httponly=True,
+        samesite='lax'
+    )
+        return {"message" : "User Logged out successfully!!"}
 
+    except Exception as e:
+        print(f"Error while logging out the user!! {e}")
+        return {"message" : "Error while logging out the User!!"}
+    
 
+def handle_delete_user_account(password , current_user , db , res):
+    print("Deleting the user account permanantely!!")
+    if not current_user or not current_user['id']:
+        raise HTTPException(
+            status_code=400 , 
+            detail="Unauthorized user deleting account!!"
+        )
+    
+    if not password:
+        raise HTTPException(
+            status_code=400 , 
+            detail="Password not provided!!"
+        )
+    
+    try:
+        user_id = current_user['id']
+        existing_user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not existing_user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found in the database!!"
+            )
+        
+        old_hashed_password = existing_user.password
+        new_user_password = password
+
+        if verify_user_password(new_user_password , old_hashed_password) is False:
+            raise HTTPException(
+                status_code=400,
+                detail="User Password is Incorrect!!"
+            )
+        
+        db.delete(existing_user)
+        db.commit()
+        print("User ACC deleted successfuly!")
+
+        res.delete_cookie(     ## deleting the cookie
+        key='token',
+        path='/',
+        domain=None,
+        secure=False,
+        httponly=True,
+        samesite='lax'
+    )
+
+        return {"msg" : "User Accound Deleted Successfull!!"}
+    
+    except Exception as e:
+        print(f"Error while deleting user account!! {e}")
+        raise HTTPException(
+            status_code=500 , 
+            detail="Error at server side while deleting user account!!"
+        )

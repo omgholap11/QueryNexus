@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
+import UserProfile from './pages/UserProfile';
 import WelcomePopup from './components/WelcomePopup';
 import AuthModal from './components/AuthModal';
 import { Toaster } from 'sonner';
@@ -64,6 +65,7 @@ function App() {
                         <Dashboard />
                     </Layout>
                 } />
+                <Route path="/user-profile" element={<UserProfile />} />
             </Routes>
         </>
     );

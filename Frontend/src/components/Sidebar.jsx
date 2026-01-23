@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setActiveSession, setMessages, setIsLoadingMessages, clearChat, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
-
+import { setIsAuthenticated, setUser } from '../Features/authSlice';
+import { toast } from 'sonner'
 const SESSIONS_LIMIT = 8;
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
@@ -17,6 +18,8 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const profileRef = useRef(null);
 
     // Internal function to load a chat session's messages
     const handleChatClickInternal = useCallback(async (sessionId, title) => {
@@ -144,6 +147,41 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         if (isOpen) onClose();
     };
 
+    // Close profile popup when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
+        if (isProfileOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isProfileOpen]);
+
+    const handleLogout = async () => {
+        try {
+            const response = await axios.post('/api/user/logout');
+
+            if (response.status == 200) {
+                toast.success("User Log out successful!")
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+            toast.error("Error while logging out user!!")
+        } finally {
+            dispatch(setIsAuthenticated(false));
+            dispatch(setUser({ name: "", email: "", id: "" }));
+            dispatch(clearChat());
+            navigate('/');
+        }
+    };
+
     return (
         <aside className={`
             ${isCollapsed ? 'w-0 md:w-16' : 'w-[260px]'} 
@@ -233,13 +271,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
                         <div className="h-px bg-border-dark my-2"></div>
 
-                        {/* Projects Section */}
-                        <nav className="space-y-1 mb-4">
-                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-[20px]">folder_open</span>
-                                <span className="text-sm">New Project</span>
-                            </button>
-                        </nav>
+
 
                         {/* Chats Section */}
                         <div
@@ -295,21 +327,65 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                         </div>
 
                         {/* Footer - User Profile */}
-                        <div className="pt-3 mt-auto border-t border-border-dark">
-                            {/* User Profile */}
-                            <button className="flex items-center justify-between w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded cursor-pointer transition-colors">
+                        <div className="pt-3 mt-auto border-t border-border-dark relative" ref={profileRef}>
+                            {/* Profile Popup */}
+                            {isProfileOpen && (
+                                <div className="absolute bottom-full left-0 w-full px-3 pb-2 z-50">
+                                    <div className="bg-[#1E1F20] border border-border-dark rounded-sm shadow-xl overflow-hidden animate-fade-in-up ring-1 ring-white/5">
+                                        {/* User Info Header */}
+                                        <div className="p-3 border-b border-white/5 bg-white/5">
+                                            <p className="text-sm font-medium text-white truncate">
+                                                {isAuthenticated && user?.name ? user.name : 'Guest User'}
+                                            </p>
+                                            <p className="text-xs text-slate-400 truncate">
+                                                {isAuthenticated && user?.email ? user.email : 'guest@example.com'}
+                                            </p>
+                                        </div>
+
+                                        {/* Menu Items */}
+                                        <div className="p-1.5 space-y-0.5">
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/user-profile');
+                                                    setIsProfileOpen(false);
+                                                }}
+                                                className="flex items-center gap-3 w-full px-2.5 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white rounded-sm transition-colors text-left group"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">person</span>
+                                                Profile
+                                            </button>
+
+                                            <div className="h-px bg-white/5 my-1 mx-1.5"></div>
+
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center gap-3 w-full px-2.5 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-sm transition-colors text-left group"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">logout</span>
+                                                Log out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* User Profile Button */}
+                            <button
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                className={`flex items-center justify-between w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-sm cursor-pointer transition-colors ${isProfileOpen ? 'bg-white/5' : ''}`}
+                            >
                                 <div className="flex items-center gap-3">
-                                    <div className="size-8 rounded bg-slate-600 flex items-center justify-center text-xs font-medium text-white uppercase">
+                                    <div className="size-8 rounded bg-slate-600 flex items-center justify-center text-xs font-medium text-white uppercase ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
                                         {isAuthenticated && user?.name ? user.name.charAt(0) : 'G'}
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-sm font-medium text-white">
+                                        <p className="text-sm font-medium text-white max-w-[120px] truncate">
                                             {isAuthenticated && user?.name ? user.name : 'Guest'}
                                         </p>
                                         <p className="text-xs text-slate-500">Free Plan</p>
                                     </div>
                                 </div>
-                                <span className="material-symbols-outlined text-slate-500 text-[18px]">unfold_more</span>
+                                <span className={`material-symbols-outlined text-slate-500 text-[18px] transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}>unfold_more</span>
                             </button>
                         </div>
                     </>

@@ -44,3 +44,4 @@ def get_messages(
     limit : str = Query(description="Maximum number of the chats required.." , default = 20)
 ):
     return handle_get_sessions_messages(session_id=session_id, offset=offset , current_user = current_user, db = db , limit=limit)
+

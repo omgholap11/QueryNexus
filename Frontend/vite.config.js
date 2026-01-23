@@ -14,3 +14,7 @@ export default defineConfig({
     }
   }
 })
+
+
+// usng the proxy setup >> backend treets that it recieves the request from the same origin so browser also 
+// sends the coookies directly 
