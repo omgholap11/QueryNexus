@@ -182,6 +182,56 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         }
     };
 
+    const [activeMenuSessionId, setActiveMenuSessionId] = useState(null);
+    const menuRef = useRef(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setActiveMenuSessionId(null);
+            }
+        };
+
+        if (activeMenuSessionId) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeMenuSessionId]);
+
+    const handleDeleteSession = async (sessionId, e) => {
+        e.stopPropagation();
+
+        try {
+            // Optimistic update: Remove from UI immediately
+            setSessions(prev => prev.filter(s => s.session_id !== sessionId));
+            setActiveMenuSessionId(null);
+
+            // If deleted session was active, clear chat
+            if (activeSessionId === sessionId) {
+                dispatch(clearChat());
+                navigate('/');
+            }
+
+            const response = await axios.delete(`/api/chat/delete-session/${sessionId}`, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                toast.success("Chat deleted");
+            }
+
+        } catch (error) {
+            console.error("Error deleting session:", error);
+            toast.error("Failed to delete chat");
+            // Re-fetch sessions on error to restore state (simplest rollback)
+            fetchSessions(0, false, false);
+        }
+    };
+
     return (
         <aside className={`
             ${isCollapsed ? 'w-0 md:w-16' : 'w-[260px]'} 
@@ -229,9 +279,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                             </button>
 
                             <div className="flex items-center gap-1">
-                                <button className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
-                                    <span className="material-symbols-outlined text-[20px]">search</span>
-                                </button>
+
                                 {/* Mobile Close */}
                                 <button onClick={onClose} className="md:hidden text-slate-400 p-2">
                                     <span className="material-symbols-outlined">close</span>
@@ -251,21 +299,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                         <nav className="space-y-1 mb-4">
                             <button
                                 onClick={handleNewChat}
-                                className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                                className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent hover:border-primary/50 transition-all cursor-pointer"
                             >
                                 <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
                                 <span className="text-sm">New Chat</span>
-                            </button>
-                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-[20px]">smart_toy</span>
-                                <span className="text-sm">Agents</span>
-                            </button>
-                            <button className="flex items-center justify-between w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-                                    <span className="text-sm">Intelligence</span>
-                                </div>
-                                <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-medium">Beta</span>
                             </button>
                         </nav>
 
@@ -298,18 +335,46 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                             <div
                                                 key={session.session_id || idx}
                                                 onClick={() => handleChatClick(session.session_id, session.title)}
-                                                className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
+                                                className={`relative flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
                                                     ? 'bg-white/5 text-white border-l-2 border-primary'
                                                     : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'
                                                     }`}
                                             >
-                                                <p className="text-sm truncate">{session.title}</p>
+                                                <p className="text-sm truncate pr-6">{session.title}</p>
+
                                                 <button
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveMenuSessionId(
+                                                            activeMenuSessionId === session.session_id ? null : session.session_id
+                                                        );
+                                                    }}
+                                                    className={`
+                                                        ${activeMenuSessionId === session.session_id ? 'opacity-100 text-white' : 'opacity-0 group-hover:opacity-100'} 
+                                                        absolute right-2 top-1/2 -translate-y-1/2 p-1
+                                                        text-slate-500 hover:text-white transition-all hover:bg-white/10 rounded
+                                                    `}
                                                 >
-                                                    <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                                                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
                                                 </button>
+
+                                                {/* Popup Menu */}
+                                                {activeMenuSessionId === session.session_id && (
+                                                    <div
+                                                        ref={menuRef}
+                                                        className="absolute right-0 top-full mt-1 w-32 bg-[#1E1F20] border border-border-dark rounded-md shadow-xl z-[100] animate-in fade-in zoom-in-95 duration-100 origin-top-right overflow-hidden"
+                                                        style={{ right: '10px', top: '30px' }} // Adjusted positioning
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <button
+                                                            onClick={(e) => handleDeleteSession(session.session_id, e)}
+                                                            className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-2"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                            Delete Chat
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
 

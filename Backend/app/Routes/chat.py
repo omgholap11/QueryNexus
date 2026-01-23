@@ -1,6 +1,6 @@
 from fastapi import APIRouter  , Depends ,BackgroundTasks , Path , Query
 from app.Schema.response import User_Chat_Payload , ChatSessionsSchemaForClient , CompleteChatResponseForClient
-from app.Controllers.chat import get_response_from_model , handle_get_all_sessions , handle_get_sessions_messages
+from app.Controllers.chat import get_response_from_model , handle_get_all_sessions , handle_get_sessions_messages , handle_delete_chat
 from sqlalchemy.orm import Session
 from app.Config.Database.database import get_db
 from typing import Optional , List
@@ -45,3 +45,10 @@ def get_messages(
 ):
     return handle_get_sessions_messages(session_id=session_id, offset=offset , current_user = current_user, db = db , limit=limit)
 
+@chat_router.delete("/delete-session/{session_id}")
+def delete_chats(
+    session_id : str = Path(... , description="Session id of the chat session to delete..."),
+    db : Session = Depends(get_db)
+):
+    return handle_delete_chat(session_id=session_id , db=db)
+    

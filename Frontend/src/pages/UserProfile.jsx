@@ -52,8 +52,9 @@ export default function UserProfile() {
         setIsDeleting(true);
         try {
             // Placeholder API call - replace with actual endpoint
-            const response = await axios.post('/api/user/delete-account', { password: deletePassword },
+            const response = await axios.delete('/api/user/delete-account', 
                 {
+                    data: { password: deletePassword },
                     withCredentials: true
                 }
             );

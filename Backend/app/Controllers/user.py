@@ -220,6 +220,7 @@ def handle_delete_user_account(password , current_user , db , res):
         return {"msg" : "User Accound Deleted Successfull!!"}
     
     except Exception as e:
+        db.rollback()
         print(f"Error while deleting user account!! {e}")
         raise HTTPException(
             status_code=500 , 

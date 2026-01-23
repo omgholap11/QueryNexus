@@ -34,7 +34,7 @@ def user_logout(
 ):
     return handle_user_logout(res)
 
-@userrouter.post("/delete-account")
+@userrouter.delete("/delete-account")
 def delete_account(
     res : Response,
     payload : UserDeleteAccountSchema,

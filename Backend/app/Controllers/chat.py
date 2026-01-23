@@ -180,4 +180,34 @@ def handle_get_sessions_messages(session_id ,current_user , db , limit , offset)
             status_code=500 , 
             detail="Server side error while fetching the session messages."
         )
+   
     
+def handle_delete_chat(session_id , db):
+    print("Deleting the coversations!!")
+    if not session_id:
+        print("Chat's session_id missing!!")
+        raise HTTPException(
+            status_code=400 , 
+            detail="Session id for the chat not recieved!!")
+    
+    try:
+        chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+
+        if not chat_session:
+            raise HTTPException(
+                status_code=404 , 
+                detail="Chat session with provided session id does not exist!!"
+            )
+
+        db.delete(chat_session);
+        db.commit()
+
+        return {"msg" : "Chat session deleted successfully!!"}
+    
+    except Exception as e:
+        db.rollback()
+        print(f"Error while deleting chat session! {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error while deleting the chat sessions!!"
+        )
