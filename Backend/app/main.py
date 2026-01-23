@@ -26,7 +26,7 @@ app.add_middleware(
 
 
 
-print("Om Gholap")
+print("VeloMarketSense")
 
 app.include_router(userrouter , prefix="/api/user")
 

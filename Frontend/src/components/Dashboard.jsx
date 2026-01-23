@@ -447,7 +447,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                 VeloMarketSense
                             </h1>
                             <p className="text-slate-400 text-base md:text-lg font-light mb-8 md:mb-10">
-                                Navigate the Market with Velocity.
+                                Navigate through the Market news with ease.
                             </p>
 
                             {/* Input Field - Centered */}

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsAuthenticated, setUser } from '../Features/authSlice';
-import AuthModal from './AuthModal';
 import axios from 'axios';
+import AuthModal from './AuthModal';
 
 export default function Header({ title }) {
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const navigate = useNavigate();
 
     const dispatch = useDispatch();
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -49,6 +52,24 @@ export default function Header({ title }) {
         setIsAuthOpen(false);
     };
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'VeloMarketSense',
+                    text: 'Check out VeloMarketSense - Real-Time Market Intelligence.',
+                    url: window.location.href,
+                });
+            } catch (error) {
+                console.error('Error sharing:', error);
+            }
+        } else {
+            // Fallback
+            navigator.clipboard.writeText(window.location.href);
+            toast.success("Link copied to clipboard");
+        }
+    };
+
     return (
         <>
             <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-10 bg-background-dark min-h-[56px]">
@@ -63,11 +84,19 @@ export default function Header({ title }) {
 
                 {/* Right side - Actions */}
                 <div className="flex items-center gap-2 h-9">
-                    <button className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">star_outline</span>
+                    <button
+                        onClick={() => navigate('/about')}
+                        title="About VeloMarketSense"
+                        className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">info</span>
                     </button>
-                    <button className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">download</span>
+                    <button
+                        onClick={handleShare}
+                        title="Share"
+                        className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">share</span>
                     </button>
                     {isCheckingAuth ? (
                         <div className="size-9 rounded bg-white/10 animate-pulse"></div>

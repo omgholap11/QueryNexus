@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import UserProfile from './pages/UserProfile';
+import About from './pages/About';
 import WelcomePopup from './components/WelcomePopup';
 import AuthModal from './components/AuthModal';
 import { Toaster } from 'sonner';
@@ -66,6 +67,7 @@ function App() {
                     </Layout>
                 } />
                 <Route path="/user-profile" element={<UserProfile />} />
+                <Route path="/about" element={<About />} />
             </Routes>
         </>
     );
