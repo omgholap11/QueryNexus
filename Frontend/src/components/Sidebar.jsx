@@ -40,8 +40,9 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
             if (response.status === 200) {
                 const data = response.data;
-                console.log("Chat session messages:", data);
-                dispatch(setMessages(data));
+                const messages = Array.isArray(data) ? data : (data.messages || []);
+                console.log("Chat session messages:", messages);
+                dispatch(setMessages(messages));
             }
         } catch (error) {
             console.error("Error fetching messages:", error);

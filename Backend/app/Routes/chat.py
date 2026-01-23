@@ -1,5 +1,5 @@
 from fastapi import APIRouter  , Depends ,BackgroundTasks , Path , Query
-from app.Schema.response import User_Chat_Payload , ChatSessionsSchemaForClient , ChatMessagesSchemaForClient
+from app.Schema.response import User_Chat_Payload , ChatSessionsSchemaForClient , CompleteChatResponseForClient
 from app.Controllers.chat import get_response_from_model , handle_get_all_sessions , handle_get_sessions_messages
 from sqlalchemy.orm import Session
 from app.Config.Database.database import get_db
@@ -35,7 +35,7 @@ def get_all_sessions(
     return handle_get_all_sessions(current_user=current_user , db=db , offset=offset , limit = limit)
 
 
-@chat_router.get("/get-session-messages/{session_id}" , response_model= List[ChatMessagesSchemaForClient])
+@chat_router.get("/get-session-messages/{session_id}" , response_model= CompleteChatResponseForClient)
 def get_messages(
     session_id : str = Path(...,description="Session Id of the chat to retrive the messages.."), 
     current_user: dict = Depends(get_optimal_user_from_cookie),

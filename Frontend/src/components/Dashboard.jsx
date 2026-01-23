@@ -103,8 +103,18 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             });
 
             if (response.status === 200) {
+                const data = response.data;
+                // Handle both new format { messages: [], session_info: {} } and old format []
+                const messagesList = Array.isArray(data) ? data : (data.messages || []);
+                const sessionInfo = !Array.isArray(data) ? data.session_info : null;
+
+                // Update title if available
+                if (sessionInfo?.title) {
+                    dispatch(setActiveSession({ sessionId: sessionIdToLoad, title: sessionInfo.title }));
+                }
+
                 // Transform backend format to frontend format (same as Redux does)
-                const mappedMessages = response.data.map(msg => ({
+                const mappedMessages = messagesList.map(msg => ({
                     type: msg.role === 'User' ? 'user' : 'ai',
                     content: msg.content,
                 })).reverse(); // Reverse because backend sends newest first
@@ -115,7 +125,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 previousSessionIdRef.current = sessionIdToLoad;
 
                 // Dispatch to Redux
-                dispatch(setReduxMessages(response.data));
+                dispatch(setReduxMessages(messagesList));
             }
         } catch (error) {
             console.error("Error loading session from URL:", error);
@@ -187,8 +197,9 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
             if (response.status === 200) {
                 const data = response.data;
-                console.log("Older messages loaded:", data);
-                dispatch(prependMessages(data));
+                const messagesList = Array.isArray(data) ? data : (data.messages || []);
+                console.log("Older messages loaded:", messagesList);
+                dispatch(prependMessages(messagesList));
 
                 // Restore scroll position after prepending
                 setTimeout(() => {

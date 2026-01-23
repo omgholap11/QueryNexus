@@ -165,11 +165,15 @@ def handle_get_sessions_messages(session_id ,current_user , db , limit , offset)
         raise HTTPException(status_code=401 , detail="User is not Authenticated!!")
     
     try:
-        raw_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.desc()).offset(offset).limit(limit).all()   ## for desc  >>  desc(Chatmessage.createdat)
-
+        chat_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.desc()).offset(offset).limit(limit).all()   ## for desc  >>  desc(Chatmessage.createdat)
+        session_details = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        complete_chat_details = {
+            "session_info" : session_details,
+            "messages" : chat_messages
+        }
         time.sleep(2)
 
-        return raw_messages    ## response model automatically converts the model into the pydantic object and then json type using the response model
+        return complete_chat_details    ## response model automatically converts the model into the pydantic object and then json type using the response model
     except Exception as e:
         print(f"Error while fetching session Messages. {e}")
         raise HTTPException(
