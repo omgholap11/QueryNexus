@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { setActiveSession, setMessages, setIsLoadingMessages, MESSAGES_LIMIT_CONST } from '../Fetatures/chatSlice';
+import { setActiveSession, setMessages, setIsLoadingMessages, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
 
 const SESSIONS_LIMIT = 8;
 
@@ -16,8 +16,34 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
 
+    // Internal function to load a chat session's messages
+    const handleChatClickInternal = useCallback(async (sessionId, title) => {
+        console.log("Fetching session messages for:", sessionId);
+
+        // Set active session immediately
+        dispatch(setActiveSession({ sessionId, title }));
+        dispatch(setIsLoadingMessages(true));
+
+        try {
+            // Fetch first page of messages (most recent)
+            const response = await axios.get(`/api/chat/get-session-messages/${sessionId}?offset=0&limit=${MESSAGES_LIMIT_CONST}`, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                const data = response.data;
+                console.log("Chat session messages:", data);
+                dispatch(setMessages(data));
+            }
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        } finally {
+            dispatch(setIsLoadingMessages(false));
+        }
+    }, [dispatch]);
+
     // Fetch sessions with pagination
-    const fetchSessions = useCallback(async (currentOffset = 0, append = false) => {
+    const fetchSessions = useCallback(async (currentOffset = 0, append = false, autoSelectFirst = false) => {
         if (!isAuthenticated) return;
 
         if (append) {
@@ -41,6 +67,15 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 } else {
                     // Replace sessions (initial load)
                     setSessions(data);
+
+                    // Auto-select first session on initial load
+                    if (autoSelectFirst && data.length > 0 && !activeSessionId) {
+                        const firstSession = data[0];
+                        // Trigger chat click for the most recent session
+                        setTimeout(() => {
+                            handleChatClickInternal(firstSession.session_id, firstSession.title);
+                        }, 100);
+                    }
                 }
 
                 // Check if there are more sessions to load
@@ -53,14 +88,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             setIsLoadingSessions(false);
             setIsLoadingMore(false);
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, activeSessionId]);
 
     // Initial fetch on authentication change
     useEffect(() => {
         if (isAuthenticated) {
             setOffset(0);
             setHasMore(true);
-            fetchSessions(0, false);
+            fetchSessions(0, false, true); // Auto-select first session
         } else {
             setSessions([]);
             setOffset(0);
@@ -89,30 +124,8 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         }
     }, [handleLoadMore]);
 
-    const handleChatClick = async (sessionId, title) => {
-        console.log("Fetching session messages for:", sessionId);
-
-        // Set active session immediately
-        dispatch(setActiveSession({ sessionId, title }));
-        dispatch(setIsLoadingMessages(true));
-
-        try {
-            // Fetch first page of messages (most recent)
-            const response = await axios.get(`/api/chat/get-session-messages/${sessionId}?offset=0&limit=${MESSAGES_LIMIT_CONST}`, {
-                withCredentials: true
-            });
-
-            if (response.status === 200) {
-                const data = response.data;
-                console.log("Chat session messages:", data);
-                dispatch(setMessages(data));
-            }
-        } catch (error) {
-            console.error("Error fetching messages:", error);
-        } finally {
-            dispatch(setIsLoadingMessages(false));
-        }
-    };
+    // Alias for use in JSX (same as internal function)
+    const handleChatClick = handleChatClickInternal;
 
     return (
         <aside className={`
@@ -209,8 +222,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                             <p className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Chats</p>
                             <div className="space-y-0.5">
                                 {isLoadingSessions ? (
-                                    <div className="px-3 py-4 text-center">
-                                        <span className="material-symbols-outlined text-slate-500 animate-spin">sync</span>
+                                    /* Skeleton placeholders for initial load */
+                                    <div className="space-y-1">
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <div key={i} className="px-3 py-2.5 flex items-center gap-3">
+                                                <div className="flex-1 h-4 bg-white/5 rounded animate-pulse"></div>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : sessions.length === 0 ? (
                                     <p className="px-3 py-4 text-sm text-slate-500 text-center">No chats yet</p>
@@ -235,11 +253,11 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                             </div>
                                         ))}
 
-                                        {/* Orange flowing loading indicator */}
+                                        {/* Orange flowing loading indicator for load more */}
                                         {isLoadingMore && (
-                                            <div className="py-3 relative overflow-hidden">
-                                                <div className="h-0.5 w-full bg-border-dark rounded-full overflow-hidden">
-                                                    <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-[shimmer_1.5s_infinite]"></div>
+                                            <div className="py-3 px-3">
+                                                <div className="h-1 w-full bg-border-dark rounded-full relative overflow-hidden">
+                                                    <div className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-shimmer"></div>
                                                 </div>
                                             </div>
                                         )}

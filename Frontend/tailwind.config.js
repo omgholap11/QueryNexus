@@ -30,12 +30,17 @@ export default {
       },
       keyframes: {
         shimmer: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(400%)' },
+          '0%': { left: '-33%' },
+          '100%': { left: '100%' },
+        },
+        shimmerSlow: {
+          '0%': { left: '-50%' },
+          '100%': { left: '100%' },
         },
       },
       animation: {
-        shimmer: 'shimmer 1.5s linear infinite',
+        shimmer: 'shimmer 1.2s ease-in-out infinite',
+        'shimmer-slow': 'shimmerSlow 2s ease-in-out infinite',
       },
     },
   },

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { prependMessages, setIsLoadingOlderMessages, MESSAGES_LIMIT_CONST } from '../Fetatures/chatSlice';
+import { prependMessages, setIsLoadingOlderMessages, setIsLoadingMessages, setActiveSession, setMessages, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
 
 // Typewriter component for streaming effect
 const TypewriterText = ({ text, onComplete, scrollRef }) => {
@@ -53,6 +54,9 @@ const TypewriterText = ({ text, onComplete, scrollRef }) => {
 
 export default function Dashboard({ isSidebarCollapsed = false }) {
     const dispatch = useDispatch();
+    const { sessionId: urlSessionId } = useParams();
+    const navigate = useNavigate();
+
     const reduxMessages = useSelector((state) => state.chat.messages);
     const activeSessionId = useSelector((state) => state.chat.activeSessionId);
     const activeSessionTitle = useSelector((state) => state.chat.activeSessionTitle);
@@ -77,6 +81,39 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const messagesContainerRef = useRef(null);
     const previousScrollHeightRef = useRef(0);
     const previousSessionIdRef = useRef(null);
+    const urlSessionIdRef = useRef(null);
+
+    // Load session from URL param on mount or URL change
+    useEffect(() => {
+        if (urlSessionId && urlSessionId !== urlSessionIdRef.current && urlSessionId !== activeSessionId) {
+            urlSessionIdRef.current = urlSessionId;
+            // Load the session from URL
+            loadSessionFromUrl(urlSessionId);
+        }
+    }, [urlSessionId, activeSessionId]);
+
+    // Function to load session from URL
+    const loadSessionFromUrl = async (sessionIdToLoad) => {
+        dispatch(setIsLoadingMessages(true));
+        dispatch(setActiveSession({ sessionId: sessionIdToLoad, title: null }));
+
+        try {
+            const response = await axios.get(`/api/chat/get-session-messages/${sessionIdToLoad}?offset=0&limit=${MESSAGES_LIMIT_CONST}`, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                dispatch(setMessages(response.data));
+            }
+        } catch (error) {
+            console.error("Error loading session from URL:", error);
+            // If session not found, redirect to home
+            navigate('/');
+        } finally {
+            dispatch(setIsLoadingMessages(false));
+        }
+    };
+
 
     // Sync Redux messages to local state when session changes
     useEffect(() => {
@@ -327,8 +364,17 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     );
 
     return (
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col h-full w-full relative">
             <Header title={chatTitle} />
+
+            {/* Full-width shimmer loader - positioned below header */}
+            {hasMessages && isLoadingOlderMessages && (
+                <div className="absolute top-14 left-0 right-0 h-1 z-20">
+                    <div className="h-1 w-full bg-border-dark relative overflow-hidden">
+                        <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-primary to-transparent animate-shimmer-slow"></div>
+                    </div>
+                </div>
+            )}
 
             <div
                 ref={messagesContainerRef}
@@ -407,15 +453,6 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
                     {hasMessages && (
                         <div className="w-full space-y-6">
-                            {/* Orange shimmer loader at top when loading older messages */}
-                            {isLoadingOlderMessages && (
-                                <div className="py-3 relative overflow-hidden">
-                                    <div className="h-0.5 w-full bg-border-dark rounded-full overflow-hidden">
-                                        <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-shimmer"></div>
-                                    </div>
-                                </div>
-                            )}
-
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex w-full animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import WelcomePopup from './components/WelcomePopup';
@@ -52,11 +53,21 @@ function App() {
                 }}
                 theme="dark"
             />
-            <Layout>
-                <Dashboard />
-            </Layout>
+            <Routes>
+                <Route path="/" element={
+                    <Layout>
+                        <Dashboard />
+                    </Layout>
+                } />
+                <Route path="/chat/:sessionId" element={
+                    <Layout>
+                        <Dashboard />
+                    </Layout>
+                } />
+            </Routes>
         </>
     );
 }
 
 export default App;
+

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setIsAuthenticated, setUser } from '../Fetatures/authSlice';
+import { setIsAuthenticated, setUser } from '../Features/authSlice';
 import AuthModal from './AuthModal';
 import axios from 'axios';
 
@@ -51,7 +51,16 @@ export default function Header({ title }) {
 
     return (
         <>
-            <header className="flex items-center justify-end px-4 py-3 sticky top-0 z-10 bg-background-dark min-h-[56px]">
+            <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-10 bg-background-dark min-h-[56px]">
+                {/* Left side - Chat Title */}
+                <div className="flex-1 min-w-0">
+                    {title && (
+                        <h1 className="text-sm md:text-base font-medium text-white truncate max-w-[200px] md:max-w-[400px]">
+                            {title}
+                        </h1>
+                    )}
+                </div>
+
                 {/* Right side - Actions */}
                 <div className="flex items-center gap-2 h-9">
                     <button className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors">

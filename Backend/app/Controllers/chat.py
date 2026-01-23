@@ -47,6 +47,7 @@ def get_response_from_model(payload , current_user , db , background_tasks):
                "user_id" : user_id,
                "title" : "New Chat",
                "created_at" : datetime.utcnow(),
+               "updated_at" : datetime.utcnow(),
             }
 
             chat_session_model = ChatSession(**session_data)
@@ -137,7 +138,7 @@ def handle_get_all_sessions(current_user , db , offset , limit):
 
     try:
         user_id = current_user['id']
-        all_sessions = db.query(ChatSession).filter(ChatSession.user_id == user_id).order_by(ChatSession.created_at.desc()).offset(offset).limit(limit).all()
+        all_sessions = db.query(ChatSession).filter(ChatSession.user_id == user_id).order_by(ChatSession.updated_at.desc()).offset(offset).limit(limit).all()
     
         # print(f"Fetched all sessions with length {len(all_sessions)}")
         print(all_sessions)   
@@ -164,8 +165,6 @@ def handle_get_sessions_messages(session_id ,current_user , db , limit , offset)
         raise HTTPException(status_code=401 , detail="User is not Authenticated!!")
     
     try:
-        user_id = current_user['id']
-
         raw_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.desc()).offset(offset).limit(limit).all()   ## for desc  >>  desc(Chatmessage.createdat)
 
         time.sleep(2)
