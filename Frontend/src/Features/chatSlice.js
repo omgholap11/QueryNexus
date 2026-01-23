@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const MESSAGES_LIMIT = 2;
+const MESSAGES_LIMIT = 10;
 
 const initialState = {
     activeSessionId: null,
@@ -49,6 +49,8 @@ export const chatSlice = createSlice({
         },
         addMessage: (state, action) => {
             state.messages.push(action.payload);
+            // Increment offset to account for new message when loading older messages
+            state.messagesOffset += 1;
         },
         setIsLoadingMessages: (state, action) => {
             state.isLoadingMessages = action.payload;

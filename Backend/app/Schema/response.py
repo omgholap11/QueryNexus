@@ -46,4 +46,5 @@ class ChatMessagesSchemaForClient(BaseModel):
     class Config:
         from_attribute : True
         populate_by_name : True
+
         

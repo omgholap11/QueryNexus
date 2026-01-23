@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { setActiveSession, setMessages, setIsLoadingMessages, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
+import { setActiveSession, setMessages, setIsLoadingMessages, clearChat, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
 
 const SESSIONS_LIMIT = 8;
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const user = useSelector((state) => state.auth.user);
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
     const activeSessionId = useSelector((state) => state.chat.activeSessionId);
@@ -19,6 +21,12 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     // Internal function to load a chat session's messages
     const handleChatClickInternal = useCallback(async (sessionId, title) => {
         console.log("Fetching session messages for:", sessionId);
+
+        // Navigate to the chat URL
+        navigate(`/chat/${sessionId}`);
+
+        // Close mobile sidebar if open
+        if (isOpen) onClose();
 
         // Set active session immediately
         dispatch(setActiveSession({ sessionId, title }));
@@ -40,7 +48,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         } finally {
             dispatch(setIsLoadingMessages(false));
         }
-    }, [dispatch]);
+    }, [dispatch, navigate, isOpen, onClose]);
 
     // Fetch sessions with pagination
     const fetchSessions = useCallback(async (currentOffset = 0, append = false, autoSelectFirst = false) => {
@@ -95,7 +103,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         if (isAuthenticated) {
             setOffset(0);
             setHasMore(true);
-            fetchSessions(0, false, true); // Auto-select first session
+            fetchSessions(0, false, false); // Don't auto-select - show new chat view
         } else {
             setSessions([]);
             setOffset(0);
@@ -127,6 +135,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     // Alias for use in JSX (same as internal function)
     const handleChatClick = handleChatClickInternal;
 
+    // Handle new chat - clear state and navigate to root
+    const handleNewChat = () => {
+        dispatch(clearChat());
+        navigate('/');
+        // Close mobile sidebar if open
+        if (isOpen) onClose();
+    };
+
     return (
         <aside className={`
             ${isCollapsed ? 'w-0 md:w-16' : 'w-[260px]'} 
@@ -139,10 +155,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 {/* Collapsed State */}
                 {isCollapsed && (
                     <div className="hidden md:flex flex-col items-center gap-3 pt-2">
-                        {/* Logo */}
-                        <div className="size-10 bg-primary rounded-lg flex items-center justify-center">
+                        {/* Logo - click to start new chat */}
+                        <button
+                            onClick={handleNewChat}
+                            className="size-10 bg-primary rounded-lg flex items-center justify-center hover:brightness-110 transition-all"
+                            title="New Chat"
+                        >
                             <span className="material-symbols-outlined text-white text-[20px]">bolt</span>
-                        </div>
+                        </button>
                         <button
                             onClick={onToggleCollapse}
                             className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
@@ -158,12 +178,16 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                     <>
                         {/* Header - Logo & Actions */}
                         <div className="flex items-center justify-between mb-6">
-                            {/* Logo */}
-                            <div className="flex items-center gap-2">
+                            {/* Logo - click to start new chat */}
+                            <button
+                                onClick={handleNewChat}
+                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                title="New Chat"
+                            >
                                 <div className="size-9 bg-primary rounded flex items-center justify-center">
                                     <span className="material-symbols-outlined text-white text-[18px]">bolt</span>
                                 </div>
-                            </div>
+                            </button>
 
                             <div className="flex items-center gap-1">
                                 <button className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
@@ -186,7 +210,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
                         {/* Navigation Items */}
                         <nav className="space-y-1 mb-4">
-                            <button className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                            <button
+                                onClick={handleNewChat}
+                                className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
                                 <span className="text-sm">New Chat</span>
                             </button>

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { prependMessages, setIsLoadingOlderMessages, setIsLoadingMessages, setActiveSession, setMessages, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
+import { prependMessages, setIsLoadingOlderMessages, setIsLoadingMessages, setActiveSession, setMessages as setReduxMessages, addMessage, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
 
 // Typewriter component for streaming effect
 const TypewriterText = ({ text, onComplete, scrollRef }) => {
@@ -103,12 +103,27 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             });
 
             if (response.status === 200) {
-                dispatch(setMessages(response.data));
+                // Transform backend format to frontend format (same as Redux does)
+                const mappedMessages = response.data.map(msg => ({
+                    type: msg.role === 'User' ? 'user' : 'ai',
+                    content: msg.content,
+                })).reverse(); // Reverse because backend sends newest first
+
+                // Set local state directly
+                setMessages(mappedMessages);
+                setSessionId(sessionIdToLoad);
+                previousSessionIdRef.current = sessionIdToLoad;
+
+                // Dispatch to Redux
+                dispatch(setReduxMessages(response.data));
             }
         } catch (error) {
             console.error("Error loading session from URL:", error);
-            // If session not found, redirect to home
-            navigate('/');
+            // Only redirect to home if session not found (404)
+            // Don't redirect on auth errors (401/403) - user might need to sign in
+            if (error.response?.status === 404) {
+                navigate('/');
+            }
         } finally {
             dispatch(setIsLoadingMessages(false));
         }
@@ -117,26 +132,41 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
     // Sync Redux messages to local state when session changes
     useEffect(() => {
+        // Handle cleared state (new chat) - only if NOT loading from URL
+        // Don't clear if we have a urlSessionId (we're waiting for that session to load)
+        if (!activeSessionId && reduxMessages.length === 0 && !urlSessionId) {
+            setMessages([]);
+            setSessionId(null);
+            setLikedMessages({});
+            setDislikedMessages({});
+            setCopiedId(null);
+            setEditingIndex(null);
+            setEditText("");
+            previousSessionIdRef.current = null;
+            return;
+        }
+
+        // Skip if we already handled this session (e.g., loaded from URL directly)
+        if (previousSessionIdRef.current === activeSessionId) {
+            return;
+        }
+
         if (activeSessionId && reduxMessages.length > 0) {
             setMessages(reduxMessages);
-
-            // Only scroll to bottom and reset states when session actually changes
-            if (previousSessionIdRef.current !== activeSessionId) {
-                setSessionId(activeSessionId);
-                // Reset interaction states for new session
-                setLikedMessages({});
-                setDislikedMessages({});
-                setCopiedId(null);
-                setEditingIndex(null);
-                setEditText("");
-                // Scroll to bottom on initial load of a NEW session
-                setTimeout(() => {
-                    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-                }, 100);
-                previousSessionIdRef.current = activeSessionId;
-            }
+            setSessionId(activeSessionId);
+            // Reset interaction states for new session
+            setLikedMessages({});
+            setDislikedMessages({});
+            setCopiedId(null);
+            setEditingIndex(null);
+            setEditText("");
+            // Scroll to bottom on initial load of a NEW session
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            }, 100);
+            previousSessionIdRef.current = activeSessionId;
         }
-    }, [activeSessionId, reduxMessages]);
+    }, [activeSessionId, reduxMessages, urlSessionId]);
 
     // Load older messages function
     const loadOlderMessages = useCallback(async () => {
@@ -214,6 +244,8 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
         const userMessage = { type: 'user', content: messageToSend };
         setMessages(prev => [...prev, userMessage]);
+        // Keep Redux offset in sync
+        dispatch(addMessage(userMessage));
 
         if (!customMessage) setInput("");
         setIsLoading(true);
@@ -250,10 +282,14 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 setStreamingIndex(newMessages.length - 1); // Start streaming the new message
                 return newMessages;
             });
+            // Keep Redux offset in sync
+            dispatch(addMessage(aiMessage));
         } catch (error) {
             console.error("Error fetching response:", error);
             const errorMessage = { type: 'ai', content: "**Error**: Unable to connect to VeloMarketSense engine." };
             setMessages(prev => [...prev, errorMessage]);
+            // Keep Redux offset in sync
+            dispatch(addMessage(errorMessage));
         } finally {
             setIsLoading(false);
         }
@@ -343,6 +379,11 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     };
 
     const hasMessages = messages.length > 0;
+    // Show skeleton loading state when:
+    // 1. Redux is still loading messages
+    // 2. OR we're on a chat URL but don't have messages yet (initial load)
+    const isLoadingSession = isLoadingMessages || (urlSessionId && !hasMessages);
+    const showChatLayout = hasMessages || isLoadingSession;
     const lastUserIndex = messages.map((m, i) => m.type === 'user' ? i : -1).filter(i => i !== -1).pop();
     const lastAiIndex = messages.map((m, i) => m.type === 'ai' ? i : -1).filter(i => i !== -1).pop();
 
@@ -379,11 +420,11 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             <div
                 ref={messagesContainerRef}
                 onScroll={handleMessagesScroll}
-                className={`flex-1 overflow-y-auto custom-scrollbar w-full ${hasMessages ? 'pb-28' : ''}`}
+                className={`flex-1 overflow-y-auto custom-scrollbar w-full ${showChatLayout ? 'pb-28' : ''}`}
             >
-                <div className={`w-full max-w-3xl mx-auto transition-all duration-500 ease-in-out min-h-full flex flex-col px-4 ${hasMessages ? 'justify-start pt-6 md:pt-8' : 'items-center justify-center'}`}>
+                <div className={`w-full max-w-3xl mx-auto transition-all duration-500 ease-in-out min-h-full flex flex-col px-4 ${showChatLayout ? 'justify-start pt-6 md:pt-8' : 'items-center justify-center'}`}>
 
-                    {!hasMessages && (
+                    {!showChatLayout && (
                         <div className="text-center animate-fade-in-up relative z-10 w-full -mt-16 md:-mt-24">
                             {/* Logo */}
                             <div className="flex justify-center mb-4 md:mb-5">
@@ -451,9 +492,40 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                         </div>
                     )}
 
-                    {hasMessages && (
+                    {showChatLayout && (
                         <div className="w-full space-y-6">
-                            {messages.map((msg, idx) => (
+                            {/* Skeleton loading for session messages */}
+                            {isLoadingSession && (
+                                <>
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <div key={`skeleton-${i}`} className="space-y-6">
+                                            {/* User message skeleton */}
+                                            <div className="flex w-full justify-end">
+                                                <div className="max-w-[70%] md:max-w-[60%]">
+                                                    <div className="bg-[#1E1F20] rounded-2xl px-4 py-3 border border-white/5">
+                                                        <div className="h-4 bg-white/10 rounded animate-pulse w-32 md:w-48"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* AI message skeleton */}
+                                            <div className="flex gap-3 w-full">
+                                                <div className="shrink-0 mt-0.5">
+                                                    <div className="size-8 md:size-9 rounded bg-primary/50 flex items-center justify-center animate-pulse">
+                                                        <span className="material-symbols-outlined text-white/50 text-[16px] md:text-[18px]">bolt</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 bg-white/10 rounded animate-pulse w-full"></div>
+                                                    <div className="h-4 bg-white/5 rounded animate-pulse w-[85%]"></div>
+                                                    <div className="h-4 bg-white/5 rounded animate-pulse w-[60%]"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+                            {/* Actual messages */}
+                            {!isLoadingSession && messages.map((msg, idx) => (
                                 <div key={idx} className={`flex w-full animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
 
                                     {msg.type === 'user' ? (
@@ -601,8 +673,8 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                 </div>
             </div>
 
-            {/* Bottom Input - Only show when has messages */}
-            {hasMessages && (
+            {/* Bottom Input - Show when in chat layout (loading or has messages) */}
+            {showChatLayout && (
                 <div className="w-full px-4 py-4 bg-background-dark">
                     <div className="w-full max-w-3xl mx-auto">
                         <div className="relative bg-surface-dark rounded-2xl border border-border-dark focus-within:border-primary/50 transition-all duration-200">
