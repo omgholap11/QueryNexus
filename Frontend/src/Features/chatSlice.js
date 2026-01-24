@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const MESSAGES_LIMIT = 10;
+const MESSAGES_LIMIT = 20;
 
 const initialState = {
     activeSessionId: null,

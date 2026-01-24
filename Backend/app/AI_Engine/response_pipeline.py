@@ -63,9 +63,11 @@ def generate_llm_response(user_question: str, session_id: str , is_first_message
         context_docs = retriver.invoke(standalone_question)
 
 
-        print(f"Contextual Docs Found: {len(context_docs)}")
+        print(f"Contextual Docs Found: {context_docs}")
 
         if not context_docs:
+            save_chat_history_to_redis(session_id, "user", user_question)
+            save_chat_history_to_redis(session_id, "ai", "I couldn't find any recent updates on this topic in my database.")
             return LLM_Response_Format(
                 answer="I couldn't find any recent updates on this topic in my database.",
                 source=[] 

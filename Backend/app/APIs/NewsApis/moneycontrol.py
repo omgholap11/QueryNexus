@@ -1,5 +1,6 @@
 import feedparser
 import datetime
+from app.Utils.session_utils import get_timestamp
 
 def normalize_to_utc(timestamp):
     try:
@@ -45,6 +46,7 @@ def get_livemint_news(category="markets"):
                 "source": "LiveMint",
                 "date": normalize_to_utc(entry.get('published')),
                 "category": "market-news",
+                "timestamp" : get_timestamp()
             })
             
         print(normalized_news)

@@ -3,6 +3,7 @@ import os
 import datetime
 import time
 from dotenv import load_dotenv
+from app.Utils.session_utils import get_timestamp
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '..', '..', '..' , '.env')
@@ -66,6 +67,7 @@ def get_marketaux_news(symbols=None, country="in"):
                 "source": item.get('source'),
                 "date": normalize_to_utc(item.get('published_at')),
                 "category": "financial",
+                "timestamp" : get_timestamp()
             })
         print(normalized_news)    
         return normalized_news

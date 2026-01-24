@@ -104,12 +104,12 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
 
     // Load session from URL param on mount or URL change
     useEffect(() => {
-        if (urlSessionId && urlSessionId !== urlSessionIdRef.current && urlSessionId !== activeSessionId) {
+        if (urlSessionId && urlSessionId !== urlSessionIdRef.current) {
             urlSessionIdRef.current = urlSessionId;
             // Load the session from URL
             loadSessionFromUrl(urlSessionId);
         }
-    }, [urlSessionId, activeSessionId]);
+    }, [urlSessionId]);
 
     // Function to load session from URL
     const loadSessionFromUrl = async (sessionIdToLoad) => {

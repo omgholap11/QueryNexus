@@ -1,6 +1,7 @@
 
 from pygooglenews import GoogleNews
 import datetime
+from app.Utils.session_utils import get_timestamp
 
 def normalize_to_utc(timestamp):
     try:
@@ -65,6 +66,7 @@ def parse_rss_entry(entry, tag):
         "source": entry.get('source', {}).get('title', 'Google RSS'),
         "date": normalize_to_utc(entry.get('published')),
         "category": "market-news",
-        "tags": [tag] 
+        "tags": [tag] ,
+        "timestamp" : get_timestamp()
     }
 

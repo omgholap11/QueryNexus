@@ -9,8 +9,6 @@ from app.Models.chat import ChatSession , ChatMessage
 from app.Config.Database.database import session   ## dont use the get_db because it is special only for the fastapi routing and the handlers that exist only upto reqest lifecycle
 from app.Redis.redis_service import save_chat_message_to_redis_queue
 import json
-import time
-
 ##  Background Tasks
 def update_chat_title_task(session_id : str , user_query : str ):   ## this background tasks required there own db session as the first db session gets closed as soon as the request i being over right 
     print("Background Task in Progress to update the chat title.")     ## so create the another local session 
@@ -150,7 +148,7 @@ def handle_get_all_sessions(current_user , db , offset , limit):
         # print(f"Fetched all sessions with length {len(all_sessions)}")
         print(all_sessions)   
 
-        time.sleep(2)
+        # time.sleep(2)
 
         return all_sessions   ## fast api converts these into the json using pydantic validations because of the responsre_model
     
@@ -178,7 +176,9 @@ def handle_get_sessions_messages(session_id ,current_user , db , limit , offset)
             "session_info" : session_details,
             "messages" : chat_messages
         }
-        time.sleep(2)
+        # time.sleep(2)
+
+        print(complete_chat_details)
 
         return complete_chat_details    ## response model automatically converts the model into the pydantic object and then json type using the response model
     except Exception as e:

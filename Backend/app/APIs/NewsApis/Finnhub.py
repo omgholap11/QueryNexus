@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import time
+from app.Utils.session_utils import get_timestamp
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '..', '..', '..', '.env')
 load_dotenv(dotenv_path=env_path)
@@ -44,7 +45,8 @@ def get_news_finnhub():
                     "date": clean_date(news['datetime']),
                     "source": news['source'],
                     "summary": news['summary'],
-                    "url":  news['url']
+                    "url":  news['url'],
+                    "timestamp" : get_timestamp()
                 }
             )
 

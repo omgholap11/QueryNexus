@@ -5,7 +5,7 @@ import axios from 'axios';
 import { setActiveSession, setMessages, setIsLoadingMessages, clearChat, MESSAGES_LIMIT_CONST } from '../Features/chatSlice';
 import { setIsAuthenticated, setUser } from '../Features/authSlice';
 import { toast } from 'sonner'
-const SESSIONS_LIMIT = 8;
+const SESSIONS_LIMIT = 10;
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
     const dispatch = useDispatch();
@@ -143,6 +143,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     const handleNewChat = () => {
         dispatch(clearChat());
         navigate('/');
+        fetchSessions(0, false, false);
         // Close mobile sidebar if open
         if (isOpen) onClose();
     };
@@ -334,7 +335,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                                         {sessions.map((session, idx) => (
                                             <div
                                                 key={session.session_id || idx}
-                                                onClick={() => handleChatClick(session.session_id, session.title)}
+                                                onClick={() => {
+                                                    handleChatClick(session.session_id, session.title);
+                                                    fetchSessions(0, false, false);
+                                                }}
                                                 className={`relative flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group ${activeSessionId === session.session_id
                                                     ? 'bg-white/5 text-white border-l-2 border-primary'
                                                     : 'hover:bg-white/5 hover:border-l-2 hover:border-primary/50 text-slate-400'

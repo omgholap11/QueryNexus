@@ -3,6 +3,7 @@ import os
 import sys
 import datetime
 from dotenv import load_dotenv
+from app.Utils.session_utils import get_timestamp
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '..', '..', '..' ,'.env')
@@ -56,6 +57,7 @@ def get_newsdata_io(category="business", country="in"):
                 "source": item.get('source_id'),
                 "date": normalize_to_utc(item.get('pubDate')), 
                 "category": "market-news",
+                "timestamp" : get_timestamp
             })
             
             print(len(normalized_news))
