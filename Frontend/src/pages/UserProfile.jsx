@@ -52,7 +52,7 @@ export default function UserProfile() {
         setIsDeleting(true);
         try {
             // Placeholder API call - replace with actual endpoint
-            const response = await axios.delete('/api/user/delete-account', 
+            const response = await axios.delete('/api/user/delete-account',
                 {
                     data: { password: deletePassword },
                     withCredentials: true
@@ -222,11 +222,11 @@ export default function UserProfile() {
                 return (
                     <div className="space-y-6 animate-fade-in-up pb-10">
                         <div>
-                            <h2 className="text-2xl font-semibold mb-1">Security at VeloMarketSense</h2>
+                            <h2 className="text-2xl font-semibold mb-1">Security at QueryNexus</h2>
                             <p className="text-slate-400 text-sm">Last Updated: {new Date().toLocaleDateString()}</p>
                         </div>
                         <div className="bg-surface-dark border border-border-dark rounded-lg p-6 space-y-6 text-slate-300 text-sm leading-relaxed">
-                            <p>At VeloMarketSense, protecting your data and privacy is our top priority. We utilize industry-standard security practices and modern architecture to ensure your information remains safe.</p>
+                            <p>At QueryNexus, protecting your data and privacy is our top priority. We utilize industry-standard security practices and modern architecture to ensure your information remains safe.</p>
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">1. Data Encryption</h3>
@@ -265,16 +265,16 @@ export default function UserProfile() {
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">5. Vulnerability Reporting (Responsible Disclosure)</h3>
-                                <p>We welcome reports from security researchers and developers. If you believe you have found a vulnerability in VeloMarketSense, please report it to us responsibly:</p>
+                                <p>We welcome reports from security researchers and developers. If you believe you have found a vulnerability in QueryNexus, please report it to us responsibly:</p>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                                    <li><strong className="text-slate-300">Email:</strong> <a href="mailto:security@velomarketsense.com" className="text-primary hover:text-primary/80 transition-colors">security@velomarketsense.com</a></li>
+                                    <li><strong className="text-slate-300">Email:</strong> <a href="mailto:security@querynexus.com" className="text-primary hover:text-primary/80 transition-colors">security@querynexus.com</a></li>
                                     <li><strong className="text-slate-300">Policy:</strong> We ask that you do not exploit the vulnerability or share it publicly until we have had a reasonable time to address it.</li>
                                 </ul>
                             </div>
 
                             <div className="space-y-2 pt-2 border-t border-white/5">
                                 <h3 className="text-base font-semibold text-white">6. Contact Us</h3>
-                                <p>For any specific questions regarding our security practices, please contact our support team at <a href="mailto:support@velomarketsense.com" className="text-primary hover:text-primary/80 transition-colors">support@velomarketsense.com</a>.</p>
+                                <p>For any specific questions regarding our security practices, please contact our support team at <a href="mailto:support@querynexus.com" className="text-primary hover:text-primary/80 transition-colors">support@querynexus.com</a>.</p>
                             </div>
                         </div>
                     </div>
@@ -290,12 +290,12 @@ export default function UserProfile() {
                         <div className="bg-surface-dark border border-border-dark rounded-lg p-6 space-y-6 text-slate-300 text-sm leading-relaxed">
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">1. Introduction</h3>
-                                <p>Welcome to VeloMarketSense. By accessing or using our website and services, you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, you must not use our Services.</p>
+                                <p>Welcome to QueryNexus. By accessing or using our website and services, you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, you must not use our Services.</p>
                             </div>
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">2. Nature of Services</h3>
-                                <p>VeloMarketSense is a real-time news aggregation and information retrieval platform.</p>
+                                <p>QueryNexus is a real-time news aggregation and information retrieval platform.</p>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
                                     <li><strong className="text-slate-300">News Aggregation:</strong> We fetch publicly available financial and market news from third-party sources (via NewsAPIs).</li>
                                     <li><strong className="text-slate-300">AI-Assisted Retrieval (RAG):</strong> We utilize Artificial Intelligence to summarize and retrieve relevant news articles based on user queries.</li>
@@ -305,7 +305,7 @@ export default function UserProfile() {
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">3. No Financial Advice</h3>
-                                <p>VeloMarketSense is strictly a news aggregator and does not provide financial advice.</p>
+                                <p>QueryNexus is strictly a news aggregator and does not provide financial advice.</p>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
                                     <li><strong className="text-slate-300">Information Only:</strong> All content provided is for informational purposes only.</li>
                                     <li><strong className="text-slate-300">No Endorsement:</strong> The display of specific news articles does not constitute an endorsement or recommendation to buy, sell, or hold any security.</li>
@@ -315,7 +315,7 @@ export default function UserProfile() {
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">4. Artificial Intelligence & Content Accuracy</h3>
-                                <p>Our services use Artificial Intelligence (AI) to process and summarize news data. By using VeloMarketSense, you acknowledge that:</p>
+                                <p>Our services use Artificial Intelligence (AI) to process and summarize news data. By using QueryNexus, you acknowledge that:</p>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
                                     <li><strong className="text-slate-300">Summarization Errors:</strong> AI-generated summaries may occasionally misinterpret the original news source or omit context.</li>
                                     <li><strong className="text-slate-300">Third-Party Sources:</strong> We do not create the news content. We are not responsible for the accuracy, reliability, or completeness of the articles fetched from third-party APIs.</li>
@@ -336,14 +336,14 @@ export default function UserProfile() {
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">6. Intellectual Property</h3>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                                    <li><strong className="text-slate-300">Our Rights:</strong> The VeloMarketSense platform, code, and AI retrieval architecture are the property of VeloMarketSense.</li>
+                                    <li><strong className="text-slate-300">Our Rights:</strong> The QueryNexus platform, code, and AI retrieval architecture are the property of QueryNexus.</li>
                                     <li><strong className="text-slate-300">Third-Party Content:</strong> Headlines, snippets, and links to news articles remain the intellectual property of their respective publishers. We display this content under fair use/licensing for aggregation purposes.</li>
                                 </ul>
                             </div>
 
                             <div className="space-y-2">
                                 <h3 className="text-base font-semibold text-white">7. Limitation of Liability</h3>
-                                <p>To the fullest extent permitted by law, VeloMarketSense shall not be liable for any damages, including loss of profits or trading losses, resulting from:</p>
+                                <p>To the fullest extent permitted by law, QueryNexus shall not be liable for any damages, including loss of profits or trading losses, resulting from:</p>
                                 <ul className="list-disc pl-5 space-y-1 text-slate-400">
                                     <li>Your reliance on news data provided by the Service;</li>
                                     <li>Delays or interruptions in real-time news delivery;</li>
@@ -360,7 +360,7 @@ export default function UserProfile() {
                                 <h3 className="text-base font-semibold text-white">9. Contact Information</h3>
                                 <p>If you have questions about these Terms, please contact us at:</p>
                                 <p className="text-primary hover:text-primary/80 transition-colors">
-                                    <a href="mailto:support@velomarketsense.com">support@velomarketsense.com</a>
+                                    <a href="mailto:support@querynexus.com">support@querynexus.com</a>
                                 </p>
                             </div>
                         </div>

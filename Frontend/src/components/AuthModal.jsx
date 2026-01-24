@@ -157,8 +157,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     </h2>
                     <p className="text-slate-400 text-sm mt-1">
                         {mode === 'signin'
-                            ? 'Sign in to continue to VeloMarketSense'
-                            : 'Join VeloMarketSense today'}
+                            ? 'Sign in to continue to QueryNexus'
+                            : 'Join QueryNexus today'}
                     </p>
                 </div>
 

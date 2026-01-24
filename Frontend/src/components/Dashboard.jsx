@@ -83,6 +83,25 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
     const previousSessionIdRef = useRef(null);
     const urlSessionIdRef = useRef(null);
 
+    // Rotating Placeholder Logic
+    const placeholderOptions = [
+        "Summarize how the conflict in the Middle East is currently impacting global oil prices.",
+        "What are the key takeaways from the latest advancements in Generative AI this month?",
+        "Analyze the impact of the latest Federal Reserve interest rate decision on tech stocks.",
+        "How do recent US-China trade tensions affect the semiconductor supply chain?"
+    ];
+    const [placeholderText, setPlaceholderText] = useState(placeholderOptions[0]);
+
+    useEffect(() => {
+        let index = 0;
+        const interval = setInterval(() => {
+            index = (index + 1) % placeholderOptions.length;
+            setPlaceholderText(placeholderOptions[index]);
+        }, 3000); // Rotate every 3 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
     // Load session from URL param on mount or URL change
     useEffect(() => {
         if (urlSessionId && urlSessionId !== urlSessionIdRef.current && urlSessionId !== activeSessionId) {
@@ -297,7 +316,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
             dispatch(addMessage(aiMessage));
         } catch (error) {
             console.error("Error fetching response:", error);
-            const errorMessage = { type: 'ai', content: "**Error**: Unable to connect to VeloMarketSense engine." };
+            const errorMessage = { type: 'ai', content: "**Error**: Unable to connect to QueryNexus engine." };
             setMessages(prev => [...prev, errorMessage]);
             // Keep Redux offset in sync
             dispatch(addMessage(errorMessage));
@@ -444,10 +463,10 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                 </div>
                             </div>
                             <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2 md:mb-3">
-                                VeloMarketSense
+                                QueryNexus
                             </h1>
                             <p className="text-slate-400 text-base md:text-lg font-light mb-8 md:mb-10">
-                                Navigate through the Market news with ease.
+                                Beyond the Headlines. Behind the Trends.
                             </p>
 
                             {/* Input Field - Centered */}
@@ -458,7 +477,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                         rows={1}
                                         autoFocus
                                         className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
-                                        placeholder="Ask VeloMarketSense anything"
+                                        placeholder={placeholderText}
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
@@ -497,7 +516,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                     </div>
                                 </div>
                                 <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
-                                    VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
+                                    QueryNexus can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
                                 </p>
                             </div>
                         </div>
@@ -694,7 +713,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                                 rows={1}
                                 autoFocus
                                 className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 font-normal outline-none resize-none custom-scrollbar px-4 md:px-5 pt-4 pb-3 text-sm md:text-base max-h-[200px]"
-                                placeholder="Ask VeloMarketSense anything"
+                                placeholder="Ask QueryNexus anything"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
@@ -733,7 +752,7 @@ export default function Dashboard({ isSidebarCollapsed = false }) {
                             </div>
                         </div>
                         <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
-                            VeloMarketSense can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
+                            QueryNexus can make mistakes. <span className="underline cursor-pointer hover:text-slate-400">Check answers.</span>
                         </p>
                     </div>
                 </div>

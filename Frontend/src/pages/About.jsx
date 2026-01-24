@@ -86,8 +86,8 @@ export default function About() {
                                 key={item.id}
                                 onClick={() => scrollToSection(item.id)}
                                 className={`text-left px-6 py-2.5 text-sm font-medium transition-all duration-300 ${activeSection === item.id
-                                        ? 'text-white'
-                                        : 'text-slate-500 hover:text-slate-300'
+                                    ? 'text-white'
+                                    : 'text-slate-500 hover:text-slate-300'
                                     }`}
                             >
                                 {item.label}
@@ -109,7 +109,7 @@ export default function About() {
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">Zero Noise.</span>
                         </h1>
                         <p className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed border-l-2 border-primary/30 pl-6">
-                            Welcome to VeloMarketSense, your advanced intelligence platform for real-time financial news retrieval. In an era of information overload, we exist to streamline your access to the facts—instantly and accurately.
+                            Welcome to QueryNexus, your advanced intelligence platform for real-time financial news retrieval. In an era of information overload, we exist to streamline your access to the facts—instantly and accurately.
                         </p>
                     </section>
 
@@ -120,7 +120,7 @@ export default function About() {
                         </h2>
                         <div className="space-y-4">
                             <p className="text-slate-300 leading-relaxed">
-                                At the heart of VeloMarketSense lies a sophisticated <strong className="text-white">Retrieval-Augmented Generation (RAG)</strong> engine. Unlike standard AI chatbots that can "hallucinate" or invent facts, our system is grounded in reality.
+                                At the heart of QueryNexus lies a sophisticated <strong className="text-white">Retrieval-Augmented Generation (RAG)</strong> engine. Unlike standard AI chatbots that can "hallucinate" or invent facts, our system is grounded in reality.
                             </p>
                             <div className="grid gap-4 pt-4">
                                 <div className="group">
@@ -199,7 +199,7 @@ export default function About() {
                         </h2>
                         <div className="divide-y divide-white/5">
                             {[
-                                { q: "Does VeloMarketSense provide financial advice?", a: "No. We provide news and data for you to make decisions, not financial advice." },
+                                { q: "Does QueryNexus provide financial advice?", a: "No. We provide news and data for you to make decisions, not financial advice." },
                                 { q: "How fresh is the news?", a: "Real-time. As soon as a story breaks on major networks, it is indexed." },
                                 { q: "Can the AI make up fake news?", a: "We minimize this with RAG. The system answers only using provided news articles." },
                                 { q: "Is my search history private?", a: "Yes. Encrypted and isolated. Not used for training." }

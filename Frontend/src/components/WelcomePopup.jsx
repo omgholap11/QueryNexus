@@ -59,7 +59,7 @@ export default function WelcomePopup({ onSignIn, onClose }) {
                 {/* Welcome Text */}
                 <div className="text-center mb-6">
                     <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-                        Welcome to VeloMarketSense
+                        Welcome to QueryNexus
                     </h2>
                     <p className="text-slate-400 text-sm leading-relaxed">
                         Sign in to unlock personalized market intelligence and save your chat history.

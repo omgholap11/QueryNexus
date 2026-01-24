@@ -37,6 +37,13 @@ def update_chat_title_task(session_id : str , user_query : str ):   ## this back
 def get_response_from_model(payload , current_user , db , background_tasks):
     session_id = None
     is_first_message = False
+
+    if not payload or not payload.session_id or not payload.question:
+        raise HTTPException(
+            status_code=400, 
+            detail="Query Data not recieved at the backend!!"
+        )
+    
     # print(f"Welcome User {current_user['id']}")
     if not payload.session_id or payload.session_id == "null":   ## new user so to create the sessionid and the session entry too here 
         print("New user")

@@ -56,8 +56,8 @@ export default function Header({ title }) {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'VeloMarketSense',
-                    text: 'Check out VeloMarketSense - Real-Time Market Intelligence.',
+                    title: 'QueryNexus',
+                    text: 'Check out QueryNexus - Real-Time Market Intelligence.',
                     url: window.location.href,
                 });
             } catch (error) {
@@ -86,7 +86,7 @@ export default function Header({ title }) {
                 <div className="flex items-center gap-2 h-9">
                     <button
                         onClick={() => navigate('/about')}
-                        title="About VeloMarketSense"
+                        title="About QueryNexus"
                         className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
                     >
                         <span className="material-symbols-outlined text-[20px]">info</span>
