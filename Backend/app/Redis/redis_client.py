@@ -36,7 +36,7 @@ def get_redis_client():
         redis_client = client
         return redis_client
 
-    except redis.ConnectionError:
+    except redis.ConnectionError as e:
         print(f"Error: Redis Connection Failed!! We are still up, continue with duplications!! {e}")
         return None 
     

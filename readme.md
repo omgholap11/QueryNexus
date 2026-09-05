@@ -1,47 +1,79 @@
 # QueryNexus ⚡
 
-**QueryNexus** is an advanced and streamming **Retrieval-Augmented Generation (RAG)** platform designed to filter global noise and deliver high-precision intelligence. Unlike standard chatbots that hallucinate, QueryNexus acts as a deterministic **News Engine**, aggregating real-time data from trusted financial, technological, and geopolitical sources to answer complex queries with cited facts.
-
-Built on a microservices architecture, it utilizes **Apache Kafka** for high-throughput event streaming and **Vector Search** to ground every AI response in reality.
+**QueryNexus** is an advanced streaming **Retrieval-Augmented Generation (RAG)** platform designed to filter global noise and deliver high-precision intelligence. Unlike standard chatbots that hallucinate, QueryNexus acts as a deterministic **News Intelligence Engine**, aggregating real-time data from trusted financial, technological, and market sources to answer complex queries with cited facts.
 
 ---
 
 ## 🏗️ System Architecture
 
-The application follows a **distributed, event-driven architecture** designed for scalability and fault tolerance.
+The application is designed for high throughput asynchronous data processing, sub-second vector search, and fault-tolerant message handling.
+
+### 📐 Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph Data_Ingestion ["Data Ingestion Layer (Producers & News Stream)"]
+        A1[Finnhub API] --> AP[News Producer Service]
+        A2[Marketaux API] --> AP
+        A3[Livemint RSS] --> AP
+        AP -->|URL Dedup Check| RC[Redis Cache / Hashes]
+        AP -->|Publish Unique Articles| NS[Redis Stream: news_ingestion_stream]
+    end
+
+    subgraph Background_Workers ["Ingestion & Async Processing Workers"]
+        NS -->|XREADGROUP| NW[News Worker Consumer]
+        NW -->|Smart Scraping / Trafilatura| WEB[Web Content / Fallback]
+        WEB -->|Chunking & Embedding| GEM[Gemini Embedding-001]
+        GEM -->|Vector Storage| VDB[ChromaDB Vector Store]
+        
+        CS[Chat Stream: chat_message_stream] -->|XREADGROUP| CW[Chat Worker]
+        CW -->|Persist History| PG[(PostgreSQL Database)]
+        CW -->|ACK / PEL & DLQ| DLQ[Dead Letter Queues]
+    end
+
+    subgraph Application_Layer ["API & RAG Engine Layer"]
+        U[User Interface / React 19 Frontend] <-->|HTTP / JSON| API[FastAPI Backend]
+        API <-->|Session / Windowed History| CH[Redis Conversational Memory]
+        API <-->|XADD Chat Messages| CS
+        API <-->|MMR Similarity Search| VDB
+        API <-->|RAG Prompt & Synthesis| LLM[Google Gemini 2.5 Flash]
+    end
+```
+
+---
 
 ### 1. Data Ingestion Layer (The Pipeline) 🌊
-*   **Producers**: standalone scripts that fetch real-time headlines from external APIs (NewsAPI, Finnhub, Marketaux) every 15 minutes.
-*   **Message Queue (Apache Kafka)**: Decouples data fetching from processing. Raw news is pushed to the `market-news` topic.
-*   **Consumers (Background Workers)**: Python workers consume messages, perform **Smart Scraping** to fetch full article content, and deduplicate entries.
+*   **Producers**: Standalone background services fetching real-time headlines from external financial APIs (Finnhub, Marketaux, Livemint) every 15 minutes.
+*   **Message Stream (Redis Streams)**: Decouples ingestion from downstream processing via `news_ingestion_stream`. Uses consumer groups (`news_workers`), Pending Entries List (PEL) tracking, and startup recovery via `XAUTOCLAIM`.
+*   **Ingestion Workers**: Background workers consume stream entries, perform **Smart Scraping** (Trafilatura) for full article content, generate embeddings via Google Gemini Embedding-001, and index chunks into ChromaDB.
 
 ### 2. Intelligence Layer (The Brain) 🧠
-*   **Vector Database (Pinecone)**: Stores semantic embeddings of news articles for highly efficient similarity search.
-*   **RAG Engine**: When a user asks a question, the system retrieves the **Top-K** most relevant articles using MMR (Maximal Marginal Relevance) and feeds them into the LLM as context.
-*   **Lifecycle Management**: Automated processes to maintain index freshness.
+*   **Vector Database (ChromaDB)**: Stores semantic embeddings of news articles for similarity search.
+*   **RAG Engine**: Upon receiving user queries, the engine rewrites queries (Gemini Flash Lite), performs Maximal Marginal Relevance (MMR) search across article embeddings, and feeds verified context to **Gemini 2.5 Flash**.
+*   **Lifecycle Management**: Dead Letter Queues (`news_ingestion_dlq` & `chat_message_dlq`) handle poison-pill entries and retry limits safely.
 
 ### 3. Application Layer (The Interface) 💻
-*   **Backend (FastAPI)**: High-performance Async I/O server handling user requests, chat sessions, and authentication.
-*   **Caching (Redis)**: Caches frequent queries, user sessions, and chat history for immediate context.
-*   **Frontend (React)**: Clean, responsive UI built with Vite and TailwindCSS for seamless interaction.
+*   **Backend (FastAPI)**: High-performance Async I/O server handling user authentication, session management, and RAG pipelines.
+*   **State & Caching (Redis Stack)**: Manages real-time message streams (`chat_message_stream`), rolling sliding-window conversational memory, URL deduplication hashes, and rate limiting.
+*   **Frontend (React 19)**: Responsive UI built with Vite, Redux Toolkit, and TailwindCSS for interactive chat streaming and source verification.
 
 ---
 
 ## 🚀 Key Features
 
 ### 🧠 AI & RAG
-*   **Zero-Hallucination Policy**: The AI is instructed to refuse answering if relevant news data is missing.
-*   **Source Citation**: Every answer includes direct links to source articles (Bloomberg, Reuters, TechCrunch, etc.).
-*   **Smart Context**: Filters news by similarity score (>0.85) to ensure only highly relevant data is used.
+*   **Zero-Hallucination Policy**: Strict context grounding refusing answers if relevant articles are missing.
+*   **Source Citation**: Every response includes clickable references to original news articles.
+*   **Smart Context**: MMR retrieval with similarity filtering to eliminate redundancy.
 
 ### 🛡️ Security & Performance
-*   **Rate Limiting**: Implemented Token Bucket algorithm (via Redis + SlowAPI) to prevent abuse.
-*   **HttpOnly Auth**: Secure session management using HttpOnly cookies to prevent XSS.
+*   **Rate Limiting**: Token Bucket algorithm via Redis to prevent API abuse.
+*   **HttpOnly Auth**: Secure JWT session handling with HttpOnly cookies.
 *   **Middleware**: Robust CORS configuration and trusted host validation.
 
-### ⚡ Data Engineering
-*   **Event-Driven**: Uses Kafka to handle bursts of news data without blocking the main API.
-*   **Efficient Storage**: Implements deduplication logic (Semantic Check) before storage to prevent vector bloat.
+### ⚡ Data Engineering & Background Processing
+*   **Redis Streams Queuing**: Built-in ACK-based message delivery (`XREADGROUP`, `XACK`), crash safety with Pending Entries List (PEL), and Dead Letter Queues (DLQ).
+*   **URL Deduplication**: MD5 hash-based Redis caching (3-day TTL) ensuring zero duplicate processing.
 
 ---
 
@@ -51,7 +83,6 @@ The application follows a **distributed, event-driven architecture** designed fo
   <img src="https://cdn.worldvectorlogo.com/logos/fastapi.svg" alt="FastAPI" width="60" height="60" style="margin: 10px;" />
   <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg" alt="PostgreSQL" width="60" height="60" style="margin: 10px;" />
   <img src="https://cdn.worldvectorlogo.com/logos/redis.svg" alt="Redis" width="60" height="60" style="margin: 10px;" />
-  <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Apache_Kafka_logo.svg" alt="Kafka" width="60" height="60" style="margin: 10px;" />
   <img src="https://cdn.worldvectorlogo.com/logos/react-2.svg" alt="React" width="60" height="60" style="margin: 10px;" />
   <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" alt="Tailwind" width="60" height="60" style="margin: 10px;" />
   <img src="https://avatars.githubusercontent.com/u/126733545?s=200&v=4" alt="LangChain" width="60" height="60" style="margin: 10px;" />
@@ -61,7 +92,6 @@ The application follows a **distributed, event-driven architecture** designed fo
 </div>
 <br/>
 
-
 ### Backend
 *   **Language**: Python 3.10+ 🐍
 *   **Framework**: FastAPI (Async) ⚡
@@ -69,17 +99,17 @@ The application follows a **distributed, event-driven architecture** designed fo
 *   **ORM**: SQLAlchemy 🗄️
 
 ### Data & Infrastructure
-*   **Streaming**: Apache Kafka (KRaft Mode) (Dockerized) 📨
-*   **Vector DB**: ChromaDB🌲
+*   **Message Queuing**: Redis Streams (Consumer Groups, PEL, DLQ) 🔴
+*   **Vector DB**: ChromaDB 🌲
 *   **Primary DB**: PostgreSQL 🐘
-*   **Caching**: Redis (Session mgmt & Rate Limiting) 🔴
+*   **Caching & Memory**: Redis (Session management, Conversational Windowing, Rate Limiting) 🔴
 *   **Containerization**: Docker & Docker Compose 🐳
 
 ### Frontend
-*   **Framework**: React.js (Vite) ⚛️
+*   **Framework**: React 19 (Vite) ⚛️
 *   **State Management**: Redux Toolkit 🔄
 *   **Styling**: TailwindCSS 🎨
-*   **Networking**: Axios (with Interceptors) 🌐
+*   **Networking**: Axios 🌐
 
 ---
 
@@ -89,12 +119,16 @@ The application follows a **distributed, event-driven architecture** designed fo
 QueryNexus/
 ├── Backend/
 │   ├── app/
-│   │   ├── AI_Engine/      # RAG Logic, Prompting, Retriever
-│   │   ├── APIs/           # External News API and web scrapping Integrations
-│   │   ├── Controllers/    # Business Logic
-│   │   ├── Kafka/          # Event Streaming (Producers/Consumers)
+│   │   ├── AI_Engine/      # RAG Logic, Prompting, Retriever, Vector DB Ingestion
+│   │   ├── APIs/           # External News APIs & Web Scraping Services
+│   │   ├── Controllers/    # Business & Chat Logic
 │   │   ├── Models/         # Database Schemas (SQLAlchemy)
-│   │   ├── Redis/          # Caching Layer
+│   │   ├── Redis/          # Redis Streams Services, Producers & Background Workers
+│   │   │   ├── redis_client.py    # Redis Client Singleton Connection Pool
+│   │   │   ├── redis_service.py   # Streams, Consumer Groups, PEL & DLQ Operations
+│   │   │   ├── redis_worker.py    # Chat Message Persistence Worker
+│   │   │   ├── news_producer.py   # News Ingestion Stream Producer
+│   │   │   └── news_worker.py     # News Content Processing & Embedding Worker
 │   │   ├── Routes/         # API Endpoints
 │   │   └── main.py         # App Entry Point
 │   ├── Dockerfile
@@ -118,7 +152,7 @@ QueryNexus/
 *   Node.js 18+
 
 ### 1. Infrastructure (Docker)
-Start the core services (Postgres, Redis, Kafka, Zookeeper):
+Start the core services (PostgreSQL, Redis Stack):
 ```bash
 cd Backend
 docker-compose up -d
@@ -135,13 +169,19 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### 3. Kafka Workers
+### 3. Background Workers (Redis Streams)
+Run the background producers and stream consumers in separate terminal windows:
 ```bash
-# Start the News Producer
-python -m app.Kafka.Workers.producer
+cd Backend
 
-# Start the Ingestion Consumer
-python -m app.Kafka.Workers.consumer
+# 1. Start Chat Message Database Persistence Worker
+python -m app.Redis.redis_worker
+
+# 2. Start News Ingestion Producer
+python -m app.Redis.news_producer
+
+# 3. Start News Ingestion & Embedding Worker
+python -m app.Redis.news_worker
 ```
 
 ### 4. Frontend Setup
@@ -152,7 +192,5 @@ npm run dev
 ```
 
 ---
-
-
 
 *QueryNexus - Beyond the Headlines. Behind the Trends.*
