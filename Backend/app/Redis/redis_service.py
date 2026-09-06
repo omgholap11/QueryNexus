@@ -295,6 +295,7 @@ def handle_pending_messages_dlq():
         for pending in pending_messages:
             message_id     = pending["message_id"]
             delivery_count = pending["times_delivered"]
+            idle_time_ms   = pending.get("idle", 0)
 
             if delivery_count > RETRY_THRESHOLD:
                 print(f"Message {message_id} exceeded retry threshold "
@@ -334,6 +335,21 @@ def handle_pending_messages_dlq():
                 if dlq_write_ok:
                     redis_client.xack(CHAT_STREAM_NAME, CHAT_CONSUMER_GROUP, message_id)
                     print(f"Message {message_id} moved to DLQ '{CHAT_DLQ_STREAM}' and ACKed.")
+            else:
+                ## Message is below retry threshold — check if idle for more than 10 seconds to reclaim for retry
+                if idle_time_ms >= 10000:
+                    print(f"Message {message_id} idle for {idle_time_ms} ms (attempt {delivery_count}/{RETRY_THRESHOLD}). Reclaiming for retry...")
+                    try:
+                        redis_client.xautoclaim(
+                            name=CHAT_STREAM_NAME,
+                            groupname=CHAT_CONSUMER_GROUP,
+                            consumername=CHAT_CONSUMER_NAME,
+                            min_idle_time=10000,
+                            start_id=message_id,
+                            count=1
+                        )
+                    except Exception as claim_err:
+                        print(f"Error while reclaiming idle chat message {message_id}: {claim_err}")
 
     except Exception as e:
         print(f"Error during DLQ / PEL scan: {e}")
@@ -533,6 +549,7 @@ def handle_news_pending_dlq():
         for pending in pending_messages:
             message_id     = pending["message_id"]
             delivery_count = pending["times_delivered"]
+            idle_time_ms   = pending.get("idle", 0)
 
             if delivery_count > NEWS_RETRY_THRESHOLD:
                 print(f"News article {message_id} exceeded retry threshold "
@@ -566,6 +583,21 @@ def handle_news_pending_dlq():
                 if dlq_write_ok:
                     r_client.xack(NEWS_STREAM_NAME, NEWS_CONSUMER_GROUP, message_id)
                     print(f"News article {message_id} moved to DLQ '{NEWS_DLQ_STREAM}' and ACKed.")
+            else:
+                ## Article is below retry threshold — check if idle for more than 10 seconds to reclaim for retry
+                if idle_time_ms >= 10000:
+                    print(f"News article {message_id} idle for {idle_time_ms} ms (attempt {delivery_count}/{NEWS_RETRY_THRESHOLD}). Reclaiming for retry...")
+                    try:
+                        r_client.xautoclaim(
+                            name=NEWS_STREAM_NAME,
+                            groupname=NEWS_CONSUMER_GROUP,
+                            consumername=NEWS_CONSUMER_NAME,
+                            min_idle_time=10000,
+                            start_id=message_id,
+                            count=1
+                        )
+                    except Exception as claim_err:
+                        print(f"Error while reclaiming idle news article {message_id}: {claim_err}")
 
     except Exception as e:
         print(f"Error during news DLQ / PEL scan: {e}")
