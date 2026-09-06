@@ -8,40 +8,6 @@
 
 The application is designed for high throughput asynchronous data processing, sub-second vector search, and fault-tolerant message handling.
 
-### 📐 Architecture Diagram
-
-```mermaid
-flowchart TD
-    subgraph Data_Ingestion ["Data Ingestion Layer (Producers & News Stream)"]
-        A1[Finnhub API] --> AP[News Producer Service]
-        A2[Marketaux API] --> AP
-        A3[Livemint RSS] --> AP
-        AP -->|URL Dedup Check| RC[Redis Cache / Hashes]
-        AP -->|Publish Unique Articles| NS[Redis Stream: news_ingestion_stream]
-    end
-
-    subgraph Background_Workers ["Ingestion & Async Processing Workers"]
-        NS -->|XREADGROUP| NW[News Worker Consumer]
-        NW -->|Smart Scraping / Trafilatura| WEB[Web Content / Fallback]
-        WEB -->|Chunking & Embedding| GEM[Gemini Embedding-001]
-        GEM -->|Vector Storage| VDB[ChromaDB Vector Store]
-        
-        CS[Chat Stream: chat_message_stream] -->|XREADGROUP| CW[Chat Worker]
-        CW -->|Persist History| PG[(PostgreSQL Database)]
-        CW -->|ACK / PEL & DLQ| DLQ[Dead Letter Queues]
-    end
-
-    subgraph Application_Layer ["API & RAG Engine Layer"]
-        U[User Interface / React 19 Frontend] <-->|HTTP / JSON| API[FastAPI Backend]
-        API <-->|Session / Windowed History| CH[Redis Conversational Memory]
-        API <-->|XADD Chat Messages| CS
-        API <-->|MMR Similarity Search| VDB
-        API <-->|RAG Prompt & Synthesis| LLM[Google Gemini 2.5 Flash]
-    end
-```
-
----
-
 ### 1. Data Ingestion Layer (The Pipeline) 🌊
 *   **Producers**: Standalone background services fetching real-time headlines from external financial APIs (Finnhub, Marketaux, Livemint) every 15 minutes.
 *   **Message Stream (Redis Streams)**: Decouples ingestion from downstream processing via `news_ingestion_stream`. Uses consumer groups (`news_workers`), Pending Entries List (PEL) tracking, and startup recovery via `XAUTOCLAIM`.
